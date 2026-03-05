@@ -152,7 +152,7 @@ export default function Feed() {
 
       {/* Filters */}
       <div style={{ background: "white", borderBottom: "1px solid #f2f2f2", padding: "12px 32px", overflowX: "auto" }}>
-        <div style={{ maxWidth: 1080, margin: "0 auto", display: "flex", gap: 8" }}>
+        <div style={{ maxWidth: 1080, margin: "0 auto", display: "flex", gap: 8 }}>
           {FILTERS.map(f => (
             <button key={f} className={`filter-btn ${filter === f ? "active" : ""}`} onClick={() => setFilter(f)}>{f}</button>
           ))}
