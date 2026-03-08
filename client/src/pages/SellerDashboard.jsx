@@ -304,12 +304,21 @@ const { data: listing, error } = await supabase.from("listings").insert({
                       <span>·</span>
                       <span>{l.unit_label}</span>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#fdf9f5", border: "1px solid #f0e8dc", borderRadius: 6, padding: "6px 9px", marginBottom: 10 }}>
-                      <Clock size={11} color="#c97b3a" />
-                      <span style={{ fontSize: 11, color: "#c97b3a", fontWeight: 500 }}>
-                        Expires {new Date(l.expires_at).toLocaleString("en-IN", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" })}
-                      </span>
-                    </div>
+                    {(() => {
+  const u = urgency(listing.expires_at);
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 6, background: u.bg, borderRadius: 7, padding: "6px 10px", marginBottom: 12 }}>
+      <Clock size={11} color={u.color} />
+      <span style={{ fontSize: 11, color: u.color, fontWeight: 500 }}>
+        {u.expired
+          ? "Expired"
+          : new Date(listing.expires_at).toLocaleString("en-IN", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" })
+        }
+      </span>
+      {!u.expired && <span style={{ marginLeft: "auto", fontSize: 11, color: "#bbb" }}>{listing.available_qty} left</span>}
+    </div>
+  );
+})()}
                     <div style={{ display: "inline-block", background: l.status === "active" ? "#f0faf4" : "#f5f5f5", color: l.status === "active" ? "#27ae60" : "#aaa", fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 20 }}>
                       {l.status}
                     </div>
@@ -381,7 +390,15 @@ const { data: listing, error } = await supabase.from("listings").insert({
 
               <div style={{ marginBottom: 16 }}>
                 <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 6 }}>Expires at *</label>
-                <input type="datetime-local" value={form.expires_at} onChange={e => setForm(p => ({ ...p, expires_at: e.target.value }))} className="form-input" />
+                <input
+  type="datetime-local"
+  value={form.expires_at}
+  onChange={e => setForm(p => ({ ...p, expires_at: e.target.value }))}
+  min={new Date().toISOString().slice(0, 16)}
+  // eslint-disable-next-line react-hooks/purity
+  max={new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16)}
+  className="form-input"
+/>
               </div>
               {/* Location picker */}
 <div style={{ marginBottom: 16 }}>

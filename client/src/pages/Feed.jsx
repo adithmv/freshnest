@@ -3,17 +3,18 @@ import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { getCurrentLocation, formatDistance } from "../lib/location";
-import { Home, MapPin, Clock, Search, SlidersHorizontal, Star, LogOut, ShoppingBag, X, Navigation } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import LocationPicker from "../components/ui/LocationPicker";
+import { Home, MapPin, Clock, Search, SlidersHorizontal, Star, LogOut, ShoppingBag, X, Navigation, Package } from "lucide-react";
 
 const FILTERS = ["All", "Veg", "Non-Veg", "Bakery", "Rice & Biryani", "Sweets & Desserts", "Snacks", "Thali & Meals"];
 
 function urgency(expiresAt) {
   const hrs = (new Date(expiresAt) - new Date()) / 36e5;
-  if (hrs <= 1) return { color: "#c0392b", bg: "#fff5f5" };
-  if (hrs <= 3) return { color: "#d35400", bg: "#fff8f0" };
-  return        { color: "#27ae60", bg: "#f0faf4" };
+  if (hrs <= 0)  return { color: "#bbb",    bg: "#f5f5f5",  label: "Expired",   expired: true };
+  if (hrs <= 1)  return { color: "#c0392b", bg: "#fff5f5",  label: "< 1 hr left", expired: false };
+  if (hrs <= 3)  return { color: "#d35400", bg: "#fff8f0",  label: "< 3 hrs left", expired: false };
+  return           { color: "#27ae60", bg: "#f0faf4",  label: "Fresh",      expired: false };
 }
 
 export default function Feed() {
@@ -105,7 +106,6 @@ async function fetchListings(loc) {
   });
 
 
-  const cartTotal = cart.reduce((s, c) => s + c.price * c.qty, 0);
 
 
   return (
@@ -169,13 +169,22 @@ async function fetchListings(loc) {
             ) : (
               <Link to="/login" style={{ fontSize: 13, fontWeight: 500, color: "#111", textDecoration: "none" }}>Log in</Link>
             )}
-            <Link
-  to="/cart"
-  style={{ background: "#111", color: "white", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: 7, textDecoration: "none" }}
->
-  <ShoppingBag size={14} />
-  Cart {itemCount > 0 && <span style={{ background: "white", color: "#111", borderRadius: "50%", width: 18, height: 18, fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{itemCount}</span>}
-</Link>
+<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+  <Link
+    to="/orders"
+    style={{ border: "1px solid #e8e8e8", color: "#111", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 500, display: "flex", alignItems: "center", gap: 7, textDecoration: "none", background: "white" }}
+  >
+    <Package size={14} />
+    My Orders
+  </Link>
+  <Link
+    to="/cart"
+    style={{ background: "#111", color: "white", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 500, display: "flex", alignItems: "center", gap: 7, textDecoration: "none" }}
+  >
+    <ShoppingBag size={14} />
+    Cart {itemCount > 0 && <span style={{ background: "white", color: "#111", borderRadius: "50%", width: 18, height: 18, fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{itemCount}</span>}
+  </Link>
+</div>
           </div>
         </div>
       </nav>

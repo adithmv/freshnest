@@ -80,9 +80,23 @@ export default function Cart() {
 
                     {/* Qty controls */}
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <button className="qty-btn" onClick={() => updateQty(item.id, item.qty - 1)}><Minus size={12} /></button>
-                      <span style={{ fontSize: 15, fontWeight: 600, minWidth: 20, textAlign: "center" }}>{item.qty}</span>
-                      <button className="qty-btn" onClick={() => updateQty(item.id, item.qty + 1)}><Plus size={12} /></button>
+                      <button 
+  className="qty-btn" 
+  onClick={() => updateQty(item.id, item.qty - 1)}
+  disabled={item.qty <= 1}
+  style={{ opacity: item.qty <= 1 ? 0.3 : 1, cursor: item.qty <= 1 ? "not-allowed" : "pointer" }}
+>
+  <Minus size={12} />
+</button>
+<span style={{ fontSize: 15, fontWeight: 600, minWidth: 20, textAlign: "center" }}>{item.qty}</span>
+<button 
+  className="qty-btn" 
+  onClick={() => updateQty(item.id, item.qty + 1)}
+  disabled={item.qty >= item.available_qty}
+  style={{ opacity: item.qty >= item.available_qty ? 0.3 : 1, cursor: item.qty >= item.available_qty ? "not-allowed" : "pointer" }}
+>
+  <Plus size={12} />
+</button>
                       <span style={{ fontSize: 12, color: "#bbb", marginLeft: 4 }}>of {item.available_qty} available</span>
                     </div>
                   </div>
