@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { getCurrentLocation } from "../lib/location";
-import { Home, Plus, X, Clock, ShoppingBag, Check, LogOut, Package, TrendingUp, Upload, Image } from "lucide-react";
+import { Home, Plus, X, Clock, ShoppingBag, Check, LogOut, Package, TrendingUp, Upload, Image, MapPin } from "lucide-react";
+import LocationPicker from "../components/ui/LocationPicker";
 
 const STATUS_FLOW  = { placed: "confirmed", confirmed: "preparing", preparing: "ready", ready: "picked_up", picked_up: "delivered" };
 const STATUS_LABEL = { placed: "New", confirmed: "Confirmed", preparing: "Preparing", ready: "Ready", picked_up: "With Rider", delivered: "Delivered", cancelled: "Cancelled" };
@@ -21,14 +22,17 @@ export default function SellerDashboard() {
   const [imageFile, setImageFile]   = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(false);
+  const [listingLocation, setListingLocation] = useState(null);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
   const fileInputRef = useRef(null);
+  // eslint-disable-next-line no-unused-vars
   const [sellerLocation, setSellerLocation] = useState(null);
   const [form, setForm] = useState({
     title: "", description: "", price: "", total_quantity: "",
     unit_label: "packet", is_veg: true, tags: "", expires_at: "",
   });
 
-  useEffect(() => { if (user) { fetchOrders(); fetchListings(); getCurrentLocation().then(setSellerLocation).catch(() => {}); } }, [user]);
+
 
   async function fetchOrders() {
     setLoading(true);
@@ -49,6 +53,14 @@ export default function SellerDashboard() {
       .order("created_at", { ascending: false });
     setListings(data || []);
   }
+    useEffect(() => {
+  if (user) {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchOrders();
+    fetchListings();
+    getCurrentLocation().then(setSellerLocation).catch(() => {});
+  }
+}, [user]);
 
   async function updateOrderStatus(orderId, nextStatus) {
     const update = { status: nextStatus };
@@ -94,21 +106,22 @@ export default function SellerDashboard() {
     setSubmitting(true);
 
     // Insert listing first to get the ID
-    const { data: listing, error } = await supabase.from("listings").insert({
-      seller_id:      user.id,
-      title:          form.title,
-      description:    form.description,
-      price:          parseFloat(form.price),
-      total_quantity: parseInt(form.total_quantity),
-      available_qty:  parseInt(form.total_quantity),
-      unit_label:     form.unit_label,
-      is_veg:         form.is_veg,
-      tags:           form.tags.split(",").map(t => t.trim()).filter(Boolean),
-      expires_at:     new Date(form.expires_at).toISOString(),
-      status: "active", location: sellerLocation ? `POINT(${sellerLocation.lng} ${sellerLocation.lat})` : null,
-    }).select().single();
 
-    if (error) { setSubmitting(false); return setFormErr(error.message); }
+const { data: listing, error } = await supabase.from("listings").insert({
+  seller_id:      user.id,
+  title:          form.title,
+  description:    form.description,
+  price:          parseFloat(form.price),
+  total_quantity: parseInt(form.total_quantity),
+  available_qty:  parseInt(form.total_quantity),
+  unit_label:     form.unit_label,
+  is_veg:         form.is_veg,
+  tags:           form.tags.split(",").map(t => t.trim()).filter(Boolean),
+  expires_at:     new Date(form.expires_at).toISOString(),
+  status:         "active",
+  location:       listingLocation ? `POINT(${listingLocation.lng} ${listingLocation.lat})` : null,
+  address_hint:   listingLocation?.address?.slice(0, 100) || null,
+}).select().single();
 
     // Upload image if selected
     if (imageFile) {
@@ -370,6 +383,18 @@ export default function SellerDashboard() {
                 <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 6 }}>Expires at *</label>
                 <input type="datetime-local" value={form.expires_at} onChange={e => setForm(p => ({ ...p, expires_at: e.target.value }))} className="form-input" />
               </div>
+              {/* Location picker */}
+<div style={{ marginBottom: 16 }}>
+  <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 6 }}>Pickup location</label>
+  <button
+    type="button"
+    onClick={() => setShowLocationPicker(true)}
+    style={{ width: "100%", border: "1px solid #e8e8e8", borderRadius: 8, padding: "10px 14px", fontSize: 14, fontFamily: "inherit", cursor: "pointer", background: "white", display: "flex", alignItems: "center", gap: 8, color: listingLocation ? "#111" : "#aaa" }}
+  >
+    <MapPin size={14} color={listingLocation ? "#27ae60" : "#aaa"} />
+    {listingLocation ? listingLocation.address?.slice(0, 50) + "..." : "Set pickup location on map"}
+  </button>
+</div>
 
               <div style={{ marginBottom: 24 }}>
                 <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 10 }}>Type</label>
@@ -393,6 +418,13 @@ export default function SellerDashboard() {
           </div>
         </div>
       )}
+      {showLocationPicker && (
+  <LocationPicker
+    value={listingLocation}
+    onChange={loc => setListingLocation(loc)}
+    onClose={() => setShowLocationPicker(false)}
+  />
+)}
     </div>
   );
 }

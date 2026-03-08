@@ -4,6 +4,8 @@ import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { getCurrentLocation, formatDistance } from "../lib/location";
 import { Home, MapPin, Clock, Search, SlidersHorizontal, Star, LogOut, ShoppingBag, X, Navigation } from "lucide-react";
+import { useCart } from "../context/CartContext";
+import LocationPicker from "../components/ui/LocationPicker";
 
 const FILTERS = ["All", "Veg", "Non-Veg", "Bakery", "Rice & Biryani", "Sweets & Desserts", "Snacks", "Thali & Meals"];
 
@@ -16,21 +18,20 @@ function urgency(expiresAt) {
 
 export default function Feed() {
   const { user, profile, signOut } = useAuth();
+  const { cart, addToCart, itemCount } = useCart();
   const [listings, setListings]     = useState([]);
   const [loading, setLoading]       = useState(true);
   const [search, setSearch]         = useState("");
   const [filter, setFilter]         = useState("All");
-  const [cart, setCart]             = useState([]);
-  const [showCart, setShowCart]     = useState(false);
-  const [ordering, setOrdering]     = useState(false);
-  const [orderDone, setOrderDone]   = useState(false);
-  const [address, setAddress]       = useState("");
-  const [addressErr, setAddressErr] = useState("");
   const [userLocation, setUserLocation] = useState(null);
   const [locationErr, setLocationErr]   = useState("");
+  // eslint-disable-next-line no-unused-vars
   const [locationLoading, setLocationLoading] = useState(false);
   const [radius, setRadius] = useState(3000);
 
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+
+  
   useEffect(() => { askLocation() }, []);
 
   async function askLocation() {
@@ -46,53 +47,50 @@ export default function Feed() {
     setLocationLoading(false);
   }
 
-  async function fetchListings(loc) {
-    setLoading(true);
-    try {
-      if (loc) {
-        const { data, error } = await supabase.rpc("nearby_listings", {
-          lat: loc.lat,
-          lng: loc.lng,
-          radius_meters: radius,
-        });
-        if (error) throw error;
+async function fetchListings(loc) {
+  console.log("fetchListings called with loc:", loc);
+  setLoading(true);
+  try {
+    const { data: allListings, error } = await supabase
+      .from("listings")
+      .select("*")
+      .eq("status", "active")
+      .gt("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false });
 
-        // Fetch full listing details for nearby results
-        if (data && data.length > 0) {
-          const ids = data.map(d => d.id);
-          const { data: full } = await supabase
-            .from("listings")
-            .select("*, seller_profiles(shop_name, avg_rating, shop_type), categories(name)")
-            .in("id", ids)
-            .eq("status", "active")
-            .gt("expires_at", new Date().toISOString());
+    console.log("listings result:", allListings, "error:", error);
 
-          // Merge distance into full listing data
-          const withDistance = (full || []).map(l => ({
-            ...l,
-            distance_meters: data.find(d => d.id === l.id)?.distance_meters || 0,
-          }));
-          withDistance.sort((a, b) => a.distance_meters - b.distance_meters);
-          setListings(withDistance);
-        } else {
-          setListings([]);
-        }
-      } else {
-        // Fallback — no location, show all active listings
-        const { data } = await supabase
-          .from("listings")
-          .select("*, seller_profiles(shop_name, avg_rating, shop_type), categories(name)")
-          .eq("status", "active")
-          .gt("expires_at", new Date().toISOString())
-          .order("created_at", { ascending: false });
-        setListings(data || []);
-      }
-    } catch (err) {
-      console.error(err);
+    if (error || !allListings) {
       setListings([]);
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+
+    // Fetch seller profiles separately
+    const sellerIds = [...new Set(allListings.map(l => l.seller_id))];
+    const { data: sellers } = await supabase
+      .from("seller_profiles")
+      .select("user_id, shop_name, avg_rating, shop_type")
+      .in("user_id", sellerIds);
+
+    // Merge seller data into listings
+    const merged = allListings.map(l => ({
+      ...l,
+      seller_profiles: sellers?.find(s => s.user_id === l.seller_id) || null,
+      distance_meters: null,
+    }));
+
+    if (loc) {
+      merged.sort((a, b) => a.distance_meters - b.distance_meters);
+    }
+
+    setListings(merged);
+  } catch (err) {
+    console.error(err);
+    setListings([]);
   }
+  setLoading(false);
+}
 
   const filtered = listings.filter(l => {
     const matchSearch =
@@ -106,37 +104,9 @@ export default function Feed() {
     return matchSearch && matchFilter;
   });
 
-  function addToCart(listing) {
-    setCart(prev => prev.find(c => c.id === listing.id) ? prev : [...prev, { ...listing, qty: 1 }]);
-  }
-
-  function removeFromCart(id) {
-    setCart(prev => prev.filter(c => c.id !== id));
-  }
 
   const cartTotal = cart.reduce((s, c) => s + c.price * c.qty, 0);
 
-  async function placeOrder() {
-    if (!user) { window.location.href = "/login"; return; }
-    if (!address.trim()) { setAddressErr("Please enter a delivery address"); return; }
-    setAddressErr("");
-    setOrdering(true);
-    for (const item of cart) {
-      await supabase.from("orders").insert({
-        buyer_id:         user.id,
-        seller_id:        item.seller_id,
-        listing_id:       item.id,
-        quantity:         item.qty,
-        unit_price:       item.price,
-        total_amount:     item.price * item.qty,
-        delivery_address: address,
-        payment_method:   "cod",
-      });
-    }
-    setOrdering(false);
-    setOrderDone(true);
-    setCart([]);
-  }
 
   return (
     <div style={{ fontFamily: "DM Sans, sans-serif", background: "#fafafa", minHeight: "100vh" }}>
@@ -181,12 +151,12 @@ export default function Feed() {
 
           {/* Location indicator */}
           <button
-            onClick={askLocation}
-            style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "1px solid #e8e8e8", borderRadius: 8, padding: "7px 12px", fontSize: 12, cursor: "pointer", color: userLocation ? "#27ae60" : "#aaa", fontFamily: "inherit", flexShrink: 0 }}
-          >
-            <Navigation size={12} color={userLocation ? "#27ae60" : "#aaa"} />
-            {locationLoading ? "Locating..." : userLocation ? "Location on" : "Enable location"}
-          </button>
+  onClick={() => setShowLocationPicker(true)}
+  style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "1px solid #e8e8e8", borderRadius: 8, padding: "7px 12px", fontSize: 12, cursor: "pointer", color: userLocation ? "#27ae60" : "#aaa", fontFamily: "inherit", flexShrink: 0 }}
+>
+  <Navigation size={12} color={userLocation ? "#27ae60" : "#aaa"} />
+  {userLocation ? "Location on" : "Set location"}
+</button>
 
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
             {user ? (
@@ -199,13 +169,13 @@ export default function Feed() {
             ) : (
               <Link to="/login" style={{ fontSize: 13, fontWeight: 500, color: "#111", textDecoration: "none" }}>Log in</Link>
             )}
-            <button
-              onClick={() => setShowCart(true)}
-              style={{ background: "#111", color: "white", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: 7 }}
-            >
-              <ShoppingBag size={14} />
-              Cart {cart.length > 0 && <span style={{ background: "white", color: "#111", borderRadius: "50%", width: 18, height: 18, fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{cart.length}</span>}
-            </button>
+            <Link
+  to="/cart"
+  style={{ background: "#111", color: "white", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: 7, textDecoration: "none" }}
+>
+  <ShoppingBag size={14} />
+  Cart {itemCount > 0 && <span style={{ background: "white", color: "#111", borderRadius: "50%", width: 18, height: 18, fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{itemCount}</span>}
+</Link>
           </div>
         </div>
       </nav>
@@ -347,76 +317,19 @@ export default function Feed() {
         )}
       </div>
 
-      {/* Cart Sidebar */}
-      {showCart && (
-        <>
-          <div className="overlay" onClick={() => setShowCart(false)} />
-          <div className="cart-panel">
-            <div style={{ padding: "20px 24px", borderBottom: "1px solid #f2f2f2", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: 20, fontWeight: 700 }}>Your cart</h2>
-              <button onClick={() => setShowCart(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#888" }}><X size={20} /></button>
-            </div>
-            <div style={{ flex: 1, overflowY: "auto", padding: "16px 24px" }}>
-              {cart.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "48px 0", color: "#ccc" }}>
-                  <ShoppingBag size={36} strokeWidth={1} style={{ marginBottom: 12 }} />
-                  <p style={{ fontSize: 14 }}>Your cart is empty</p>
-                </div>
-              ) : (
-                cart.map(item => (
-                  <div key={item.id} style={{ display: "flex", gap: 12, marginBottom: 16, padding: 12, background: "#fafafa", borderRadius: 10 }}>
-                    <div style={{ width: 44, height: 44, background: "#f0ece6", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
-                      {item.images?.[0] ? <img src={item.images[0]} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <Home size={18} color="#ccc" strokeWidth={1.5} />}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 2 }}>{item.title}</div>
-                      <div style={{ fontSize: 12, color: "#aaa" }}>{item.seller_profiles?.shop_name}</div>
-                      <div style={{ fontSize: 15, fontWeight: 700, marginTop: 4 }}>₹{item.price}</div>
-                    </div>
-                    <button onClick={() => removeFromCart(item.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", alignSelf: "flex-start" }}><X size={16} /></button>
-                  </div>
-                ))
-              )}
-            </div>
-            {cart.length > 0 && (
-              <div style={{ padding: "16px 24px", borderTop: "1px solid #f2f2f2" }}>
-                <div style={{ marginBottom: 14 }}>
-                  <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 6 }}>Delivery address</label>
-                  <textarea value={address} onChange={e => setAddress(e.target.value)} placeholder="Enter your full delivery address..." rows={2} style={{ width: "100%", border: "1px solid #e8e8e8", borderRadius: 8, padding: "10px 12px", fontSize: 13, outline: "none", resize: "none", fontFamily: "inherit" }} />
-                  {addressErr && <p style={{ fontSize: 12, color: "#c0392b", marginTop: 4 }}>{addressErr}</p>}
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14 }}>
-                  <span style={{ fontSize: 14, color: "#888" }}>Total</span>
-                  <span style={{ fontFamily: "Playfair Display, serif", fontSize: 20, fontWeight: 700 }}>₹{cartTotal}</span>
-                </div>
-                <div style={{ fontSize: 12, color: "#aaa", marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#27ae60" }} />
-                  Cash on delivery
-                </div>
-                <button onClick={placeOrder} disabled={ordering} style={{ width: "100%", background: "#111", color: "white", border: "none", borderRadius: 8, padding: 13, fontSize: 14, fontWeight: 600, cursor: ordering ? "not-allowed" : "pointer", opacity: ordering ? 0.7 : 1 }}>
-                  {ordering ? "Placing order..." : "Place order"}
-                </button>
-              </div>
-            )}
-          </div>
-        </>
-      )}
-
-      {/* Success Modal */}
-      {orderDone && (
-        <div className="success-modal">
-          <div style={{ background: "white", borderRadius: 16, padding: "40px 32px", textAlign: "center", maxWidth: 340, width: "90%" }}>
-            <div style={{ width: 56, height: 56, background: "#f0faf4", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
-              <ShoppingBag size={24} color="#27ae60" />
-            </div>
-            <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: 24, fontWeight: 700, marginBottom: 10 }}>Order placed</h2>
-            <p style={{ fontSize: 14, color: "#888", lineHeight: 1.7, marginBottom: 24 }}>Your order is confirmed. Pay cash to the delivery person when your food arrives.</p>
-            <button onClick={() => setOrderDone(false)} style={{ background: "#111", color: "white", border: "none", borderRadius: 8, padding: "11px 28px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
-              Back to browsing
-            </button>
-          </div>
-        </div>
-      )}
+ 
+   
+      {showLocationPicker && (
+  <LocationPicker
+    value={userLocation}
+    onChange={loc => {
+      setUserLocation(loc);
+      fetchListings(loc);
+      setShowLocationPicker(false);
+    }}
+    onClose={() => setShowLocationPicker(false)}
+  />
+)}
     </div>
   );
 }

@@ -1,13 +1,16 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
-import Landing from './pages/Landing'
-import Login from './pages/Login'
-import Signup from './pages/Signup'
-import Feed from './pages/Feed'
+import Landing        from './pages/Landing'
+import Login          from './pages/Login'
+import Signup         from './pages/Signup'
+import Feed           from './pages/Feed'
 import SellerDashboard from './pages/SellerDashboard'
-import ListingDetail from './pages/ListingDetail'
-import Orders from './pages/Orders'
-import NotFound from './pages/NotFound'
+import ListingDetail  from './pages/ListingDetail'
+import Orders         from './pages/Orders'
+import Cart           from './pages/Cart'
+import Checkout       from './pages/Checkout'
+import OrderSuccess   from './pages/OrderSuccess'
+import NotFound       from './pages/NotFound'
 
 function ProtectedRoute({ children, role }) {
   const { user, profile, loading } = useAuth()
@@ -25,6 +28,9 @@ export default function App() {
       <Route path="/signup"      element={<Signup />} />
       <Route path="/browse"      element={<Feed />} />
       <Route path="/listing/:id" element={<ListingDetail />} />
+      <Route path="/cart"        element={<Cart />} />
+      <Route path="/checkout"    element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+      <Route path="/order-success" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
       <Route path="/orders"      element={<ProtectedRoute><Orders /></ProtectedRoute>} />
       <Route path="/dashboard"   element={<ProtectedRoute role="seller"><SellerDashboard /></ProtectedRoute>} />
       <Route path="*"            element={<NotFound />} />
