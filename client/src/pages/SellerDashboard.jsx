@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
-import { Home, Plus, X, Clock, ShoppingBag, Check, ChevronDown, LogOut, Package, Star, TrendingUp } from "lucide-react";
+import { getCurrentLocation } from "../lib/location";
+import { Home, Plus, X, Clock, ShoppingBag, Check, LogOut, Package, TrendingUp, Upload, Image } from "lucide-react";
 
-const STATUS_FLOW = { placed: "confirmed", confirmed: "preparing", preparing: "ready", ready: "picked_up", picked_up: "delivered" };
+const STATUS_FLOW  = { placed: "confirmed", confirmed: "preparing", preparing: "ready", ready: "picked_up", picked_up: "delivered" };
 const STATUS_LABEL = { placed: "New", confirmed: "Confirmed", preparing: "Preparing", ready: "Ready", picked_up: "With Rider", delivered: "Delivered", cancelled: "Cancelled" };
 const STATUS_COLOR = { placed: "#2980b9", confirmed: "#8e44ad", preparing: "#d35400", ready: "#27ae60", picked_up: "#16a085", delivered: "#111", cancelled: "#bbb" };
 
@@ -17,12 +18,17 @@ export default function SellerDashboard() {
   const [showForm, setShowForm]     = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formErr, setFormErr]       = useState("");
-  const [form, setForm]             = useState({
+  const [imageFile, setImageFile]   = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(false);
+  const fileInputRef = useRef(null);
+  const [sellerLocation, setSellerLocation] = useState(null);
+  const [form, setForm] = useState({
     title: "", description: "", price: "", total_quantity: "",
     unit_label: "packet", is_veg: true, tags: "", expires_at: "",
   });
 
-  useEffect(() => { if (user) { fetchOrders(); fetchListings(); } }, [user]);
+  useEffect(() => { if (user) { fetchOrders(); fetchListings(); getCurrentLocation().then(setSellerLocation).catch(() => {}); } }, [user]);
 
   async function fetchOrders() {
     setLoading(true);
@@ -57,6 +63,28 @@ export default function SellerDashboard() {
     fetchListings();
   }
 
+  function handleImageChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { setFormErr("Image must be under 5MB"); return; }
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  }
+
+  async function uploadImage(listingId) {
+    if (!imageFile) return null;
+    setUploadProgress(true);
+    const ext  = imageFile.name.split(".").pop();
+    const path = `${user.id}/${listingId}.${ext}`;
+    const { error } = await supabase.storage
+      .from("listing-images")
+      .upload(path, imageFile, { upsert: true });
+    setUploadProgress(false);
+    if (error) { setFormErr(error.message); return null; }
+    const { data } = supabase.storage.from("listing-images").getPublicUrl(path);
+    return data.publicUrl;
+  }
+
   async function submitListing(e) {
     e.preventDefault();
     setFormErr("");
@@ -64,7 +92,9 @@ export default function SellerDashboard() {
       return setFormErr("Please fill all required fields");
     }
     setSubmitting(true);
-    const { error } = await supabase.from("listings").insert({
+
+    // Insert listing first to get the ID
+    const { data: listing, error } = await supabase.from("listings").insert({
       seller_id:      user.id,
       title:          form.title,
       description:    form.description,
@@ -75,34 +105,48 @@ export default function SellerDashboard() {
       is_veg:         form.is_veg,
       tags:           form.tags.split(",").map(t => t.trim()).filter(Boolean),
       expires_at:     new Date(form.expires_at).toISOString(),
-      status:         "active",
-    });
+      status: "active", location: sellerLocation ? `POINT(${sellerLocation.lng} ${sellerLocation.lat})` : null,
+    }).select().single();
+
+    if (error) { setSubmitting(false); return setFormErr(error.message); }
+
+    // Upload image if selected
+    if (imageFile) {
+      const imageUrl = await uploadImage(listing.id);
+      if (imageUrl) {
+        await supabase.from("listings").update({ images: [imageUrl] }).eq("id", listing.id);
+      }
+    }
+
     setSubmitting(false);
-    if (error) return setFormErr(error.message);
     setShowForm(false);
     setForm({ title: "", description: "", price: "", total_quantity: "", unit_label: "packet", is_veg: true, tags: "", expires_at: "" });
+    setImageFile(null);
+    setImagePreview(null);
     fetchListings();
     setTab("listings");
   }
 
-  const totalRevenue = orders.filter(o => o.status === "delivered").reduce((s, o) => s + o.total_amount, 0);
+  const totalRevenue  = orders.filter(o => o.status === "delivered").reduce((s, o) => s + o.total_amount, 0);
   const activeListings = listings.filter(l => l.status === "active").length;
-  const pendingOrders = orders.filter(o => o.status === "placed").length;
+  const pendingOrders  = orders.filter(o => o.status === "placed").length;
 
   return (
     <div style={{ fontFamily: "DM Sans, sans-serif", background: "#fafafa", minHeight: "100vh" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        .tab-btn { background: none; border: none; padding: "10px 0"; font-size: 14px; font-family: inherit; cursor: pointer; color: #aaa; border-bottom: 2px solid transparent; transition: all 0.15s; padding-bottom: 12px; }
+        .tab-btn { background: none; border: none; font-size: 14px; font-family: inherit; cursor: pointer; color: #aaa; border-bottom: 2px solid transparent; transition: all 0.15s; padding-bottom: 12px; }
         .tab-btn.active { color: #111; border-bottom-color: #111; }
         .order-card { background: white; border: 1px solid #efefef; border-radius: 12px; padding: 20px; margin-bottom: 14px; }
-        .listing-card { background: white; border: 1px solid #efefef; border-radius: 12px; padding: 18px; }
+        .listing-card { background: white; border: 1px solid #efefef; border-radius: 12px; overflow: hidden; }
         .stat-card { background: white; border: 1px solid #efefef; border-radius: 12px; padding: 20px; }
         .form-input { width: 100%; border: 1px solid #e8e8e8; border-radius: 8px; padding: 10px 14px; font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.15s; }
         .form-input:focus { border-color: #111; }
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 24px; }
         .modal { background: white; border-radius: 16px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
+        .upload-area { border: 2px dashed #e8e8e8; border-radius: 10px; padding: 28px; text-align: center; cursor: pointer; transition: border-color 0.15s; }
+        .upload-area:hover { border-color: #aaa; }
       `}</style>
 
       {/* Nav */}
@@ -130,9 +174,9 @@ export default function SellerDashboard() {
         {/* Stats */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 32 }}>
           {[
-            { icon: TrendingUp, label: "Total Revenue", value: `₹${totalRevenue.toLocaleString()}` },
-            { icon: Package,    label: "Active Listings", value: activeListings },
-            { icon: ShoppingBag, label: "Pending Orders", value: pendingOrders },
+            { icon: TrendingUp,  label: "Total Revenue",   value: `₹${totalRevenue.toLocaleString()}` },
+            { icon: Package,     label: "Active Listings", value: activeListings },
+            { icon: ShoppingBag, label: "Pending Orders",  value: pendingOrders },
           ].map(s => {
             const Icon = s.icon;
             return (
@@ -149,7 +193,7 @@ export default function SellerDashboard() {
           })}
         </div>
 
-        {/* Tabs + action */}
+        {/* Tabs */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #f2f2f2", marginBottom: 24 }}>
           <div style={{ display: "flex", gap: 28 }}>
             {[["orders", "Orders"], ["listings", "My Listings"]].map(([key, label]) => (
@@ -180,12 +224,8 @@ export default function SellerDashboard() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                   <div>
                     <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 3 }}>{order.listings?.title}</div>
-                    <div style={{ fontSize: 13, color: "#888" }}>
-                      {order.profiles?.full_name} · {order.delivery_address}
-                    </div>
-                    <div style={{ fontSize: 12, color: "#bbb", marginTop: 4 }}>
-                      {new Date(order.placed_at).toLocaleString("en-IN")}
-                    </div>
+                    <div style={{ fontSize: 13, color: "#888" }}>{order.profiles?.full_name} · {order.delivery_address}</div>
+                    <div style={{ fontSize: 12, color: "#bbb", marginTop: 4 }}>{new Date(order.placed_at).toLocaleString("en-IN")}</div>
                   </div>
                   <div style={{ textAlign: "right" }}>
                     <div style={{ fontFamily: "Playfair Display, serif", fontSize: 18, fontWeight: 700, marginBottom: 6 }}>₹{order.total_amount}</div>
@@ -194,7 +234,7 @@ export default function SellerDashboard() {
                     </div>
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                <div style={{ display: "flex", gap: 8 }}>
                   {STATUS_FLOW[order.status] && (
                     <button
                       onClick={() => updateOrderStatus(order.id, STATUS_FLOW[order.status])}
@@ -226,27 +266,40 @@ export default function SellerDashboard() {
               <p style={{ fontSize: 14 }}>Click New listing to post your first item</p>
             </div>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 16 }}>
               {listings.map(l => (
                 <div key={l.id} className="listing-card">
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                    <div style={{ fontSize: 15, fontWeight: 600 }}>{l.title}</div>
-                    <button onClick={() => removeListing(l.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc" }}><X size={15} /></button>
+                  {/* Image */}
+                  <div style={{ height: 130, background: "#f5f2ee", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+                    {l.images?.[0] ? (
+                      <img src={l.images[0]} alt={l.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    ) : (
+                      <Image size={28} color="#ccc" strokeWidth={1} />
+                    )}
+                    <button
+                      onClick={() => removeListing(l.id)}
+                      style={{ position: "absolute", top: 8, right: 8, background: "white", border: "none", borderRadius: "50%", width: 26, height: 26, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
+                    >
+                      <X size={13} color="#888" />
+                    </button>
                   </div>
-                  <div style={{ fontFamily: "Playfair Display, serif", fontSize: 20, fontWeight: 700, marginBottom: 8 }}>₹{l.price}</div>
-                  <div style={{ display: "flex", gap: 10, fontSize: 12, color: "#aaa", marginBottom: 10 }}>
-                    <span>{l.available_qty} / {l.total_quantity} left</span>
-                    <span>·</span>
-                    <span>{l.unit_label}</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#fdf9f5", border: "1px solid #f0e8dc", borderRadius: 6, padding: "6px 9px", marginBottom: 10 }}>
-                    <Clock size={11} color="#c97b3a" />
-                    <span style={{ fontSize: 11, color: "#c97b3a", fontWeight: 500 }}>
-                      Expires {new Date(l.expires_at).toLocaleString("en-IN", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" })}
-                    </span>
-                  </div>
-                  <div style={{ display: "inline-block", background: l.status === "active" ? "#f0faf4" : "#f5f5f5", color: l.status === "active" ? "#27ae60" : "#aaa", fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 20 }}>
-                    {l.status}
+                  <div style={{ padding: 16 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{l.title}</div>
+                    <div style={{ fontFamily: "Playfair Display, serif", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>₹{l.price}</div>
+                    <div style={{ display: "flex", gap: 10, fontSize: 12, color: "#aaa", marginBottom: 10 }}>
+                      <span>{l.available_qty} / {l.total_quantity} left</span>
+                      <span>·</span>
+                      <span>{l.unit_label}</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#fdf9f5", border: "1px solid #f0e8dc", borderRadius: 6, padding: "6px 9px", marginBottom: 10 }}>
+                      <Clock size={11} color="#c97b3a" />
+                      <span style={{ fontSize: 11, color: "#c97b3a", fontWeight: 500 }}>
+                        Expires {new Date(l.expires_at).toLocaleString("en-IN", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" })}
+                      </span>
+                    </div>
+                    <div style={{ display: "inline-block", background: l.status === "active" ? "#f0faf4" : "#f5f5f5", color: l.status === "active" ? "#27ae60" : "#aaa", fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 20 }}>
+                      {l.status}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -271,56 +324,58 @@ export default function SellerDashboard() {
                 </div>
               )}
 
+              {/* Image upload */}
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 8 }}>Food photo</label>
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageChange} style={{ display: "none" }} />
+                {imagePreview ? (
+                  <div style={{ position: "relative", borderRadius: 10, overflow: "hidden", height: 160 }}>
+                    <img src={imagePreview} alt="preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <button
+                      type="button"
+                      onClick={() => { setImageFile(null); setImagePreview(null); }}
+                      style={{ position: "absolute", top: 8, right: 8, background: "white", border: "none", borderRadius: "50%", width: 28, height: 28, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}
+                    >
+                      <X size={14} color="#888" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="upload-area" onClick={() => fileInputRef.current.click()}>
+                    <Upload size={24} color="#ccc" style={{ marginBottom: 8 }} />
+                    <p style={{ fontSize: 13, color: "#aaa", marginBottom: 4 }}>Click to upload a photo</p>
+                    <p style={{ fontSize: 11, color: "#ccc" }}>JPG, PNG up to 5MB</p>
+                  </div>
+                )}
+              </div>
+
               {[
-                { label: "Title *", key: "title", type: "text", placeholder: "e.g. Homemade Biryani" },
-                { label: "Price (₹) *", key: "price", type: "number", placeholder: "120" },
-                { label: "Quantity *", key: "total_quantity", type: "number", placeholder: "5" },
-                { label: "Unit label", key: "unit_label", type: "text", placeholder: "packet, box, kg..." },
-                { label: "Tags (comma separated)", key: "tags", type: "text", placeholder: "spicy, homemade, veg" },
+                { label: "Title *",                  key: "title",          type: "text",   placeholder: "e.g. Homemade Biryani" },
+                { label: "Price (₹) *",              key: "price",          type: "number", placeholder: "120" },
+                { label: "Quantity *",               key: "total_quantity", type: "number", placeholder: "5" },
+                { label: "Unit label",               key: "unit_label",     type: "text",   placeholder: "packet, box, kg..." },
+                { label: "Tags (comma separated)",   key: "tags",           type: "text",   placeholder: "spicy, homemade, veg" },
               ].map(f => (
                 <div key={f.key} style={{ marginBottom: 16 }}>
                   <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 6 }}>{f.label}</label>
-                  <input
-                    type={f.type}
-                    placeholder={f.placeholder}
-                    value={form[f.key]}
-                    onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
-                    className="form-input"
-                  />
+                  <input type={f.type} placeholder={f.placeholder} value={form[f.key]} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))} className="form-input" />
                 </div>
               ))}
 
               <div style={{ marginBottom: 16 }}>
                 <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 6 }}>Description</label>
-                <textarea
-                  placeholder="Tell buyers what makes this special..."
-                  value={form.description}
-                  onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
-                  rows={3}
-                  className="form-input"
-                  style={{ resize: "none" }}
-                />
+                <textarea placeholder="Tell buyers what makes this special..." value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={3} className="form-input" style={{ resize: "none" }} />
               </div>
 
               <div style={{ marginBottom: 16 }}>
                 <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 6 }}>Expires at *</label>
-                <input
-                  type="datetime-local"
-                  value={form.expires_at}
-                  onChange={e => setForm(p => ({ ...p, expires_at: e.target.value }))}
-                  className="form-input"
-                />
+                <input type="datetime-local" value={form.expires_at} onChange={e => setForm(p => ({ ...p, expires_at: e.target.value }))} className="form-input" />
               </div>
 
               <div style={{ marginBottom: 24 }}>
                 <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 10 }}>Type</label>
                 <div style={{ display: "flex", gap: 10 }}>
-                  {[["veg", true], ["non-veg", false]].map(([label, val]) => (
-                    <div
-                      key={label}
-                      onClick={() => setForm(p => ({ ...p, is_veg: val }))}
-                      style={{ flex: 1, border: `1.5px solid ${form.is_veg === val ? "#111" : "#e8e8e8"}`, borderRadius: 8, padding: "9px", cursor: "pointer", textAlign: "center", background: form.is_veg === val ? "#111" : "white", transition: "all 0.15s" }}
-                    >
+                  {[["Veg", true], ["Non-Veg", false]].map(([label, val]) => (
+                    <div key={label} onClick={() => setForm(p => ({ ...p, is_veg: val }))} style={{ flex: 1, border: `1.5px solid ${form.is_veg === val ? "#111" : "#e8e8e8"}`, borderRadius: 8, padding: "9px", cursor: "pointer", textAlign: "center", background: form.is_veg === val ? "#111" : "white", transition: "all 0.15s" }}>
                       <div style={{ fontSize: 13, fontWeight: 500, color: form.is_veg === val ? "white" : "#111" }}>{label}</div>
                     </div>
                   ))}
@@ -329,10 +384,10 @@ export default function SellerDashboard() {
 
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || uploadProgress}
                 style={{ width: "100%", background: "#111", color: "white", border: "none", borderRadius: 8, padding: 13, fontSize: 14, fontWeight: 600, cursor: submitting ? "not-allowed" : "pointer", opacity: submitting ? 0.7 : 1, fontFamily: "inherit" }}
               >
-                {submitting ? "Posting..." : "Post listing"}
+                {uploadProgress ? "Uploading image..." : submitting ? "Posting..." : "Post listing"}
               </button>
             </form>
           </div>
