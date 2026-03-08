@@ -18,8 +18,9 @@ export default function Login() {
     setLoading(false)
     if (error) return setError(error.message)
     const role = data.user?.user_metadata?.role
-    if (role === 'seller') navigate('/dashboard')
-    else navigate('/browse')
+    if (role === "seller") navigate("/dashboard");
+else if (role === "rider") navigate("/rider");
+else navigate("/browse");
   }
 
   return (
