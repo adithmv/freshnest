@@ -64,9 +64,9 @@ export default function ListingDetail() {
   );
 
   if (!listing) return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "DM Sans, sans-serif", color: "#bbb", gap: 16 }}>
-      <p style={{ fontFamily: "Playfair Display, serif", fontSize: 22 }}>Listing not found</p>
-      <Link to="/browse" style={{ fontSize: 14, color: "#111", textDecoration: "none", borderBottom: "1px solid #111" }}>Back to browse</Link>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "DM Sans, sans-serif", color: "#858080", gap: 16 }}>
+      <p style={{ fontFamily: "Playfair Display, serif", fontSize: 40 }}>LogOut First</p>
+      <Link to="/browse" style={{ fontSize: 14, color: "#111", textDecoration: "none", borderBottom: "1px solid #111" }}>Back to Dashboard</Link>
     </div>
   );
 

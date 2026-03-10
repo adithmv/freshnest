@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Home, Mail, Lock, User, Phone, ArrowRight } from 'lucide-react'
@@ -15,6 +15,15 @@ export default function Signup() {
   const [form, setForm] = useState({ fullName: '', email: '', phone: '', password: '', role: 'buyer' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const { user, profile } = useAuth();
+
+useEffect(() => {
+  if (user && profile) {
+    if (profile.role === "seller") navigate("/dashboard");
+    else if (profile.role === "rider") navigate("/rider");
+    else navigate("/browse");
+  }
+}, [user, profile]);
 
   async function handleSubmit(e) {
     e.preventDefault()

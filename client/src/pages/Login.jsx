@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Home, Mail, Lock, ArrowRight } from 'lucide-react'
+
+
 
 export default function Login() {
   const { signIn } = useAuth()
@@ -22,6 +24,17 @@ export default function Login() {
 else if (role === "rider") navigate("/rider");
 else navigate("/browse");
   }
+
+  const { user, profile } = useAuth();
+
+// Redirect if already logged in
+useEffect(() => {
+  if (user && profile) {
+    if (profile.role === "seller") navigate("/dashboard");
+    else if (profile.role === "rider") navigate("/rider");
+    else navigate("/browse");
+  }
+}, [user, profile]);
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafafa', padding: 24 }}>

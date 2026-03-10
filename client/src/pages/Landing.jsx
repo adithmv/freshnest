@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Home, MapPin, Clock, Truck, ChevronRight, Star, ArrowRight } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 const HOW_IT_WORKS = [
   { icon: Home, title: "Sellers post what they made", desc: "Set a price, quantity, and freshness deadline. The listing removes itself when time's up." },
@@ -16,11 +17,23 @@ const TESTIMONIALS = [
 
 export default function Landing() {
   const [scrolled, setScrolled] = useState(false);
+  const { user, profile } = useAuth();
+  const navigate = useNavigate();
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", fn);
     return () => window.removeEventListener("scroll", fn);
   }, []);
+  
+
+useEffect(() => {
+  if (user && profile) {
+    if (profile.role === "seller") navigate("/dashboard");
+    else if (profile.role === "rider") navigate("/rider");
+    else navigate("/browse");
+  }
+}, [user, profile]);
+
 
   return (
     <div style={{ fontFamily: "DM Sans, sans-serif", background: "#fff", color: "#111", overflowX: "hidden" }}>
@@ -44,6 +57,8 @@ export default function Landing() {
         .f4 { animation: fadeUp 0.5s ease both 0.35s; }
         .f5 { animation: fadeUp 0.5s ease both 0.45s; }
       `}</style>
+
+      
 
       {/* Nav */}
       <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, background: "rgba(255,255,255,0.95)", backdropFilter: "blur(10px)", borderBottom: `1px solid ${scrolled ? "#efefef" : "transparent"}`, transition: "border-color 0.2s", padding: "0 40px" }}>
