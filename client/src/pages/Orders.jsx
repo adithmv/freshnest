@@ -96,7 +96,7 @@ function TrackOrder({ order, onClose }) {
             <div style={{ width: 48, height: 48, borderRadius: 8, background: "#f0ece6", overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
               {order.listings?.images?.[0]
                 ? <img src={order.listings.images[0]} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                : <Package size={20} color="#ccc" strokeWidth={1} />
+                : <Package size={20} color="#686868" strokeWidth={1} />
               }
             </div>
             <div style={{ flex: 1 }}>
@@ -112,7 +112,7 @@ function TrackOrder({ order, onClose }) {
         </div>
 
         {/* Seller info */}
-        {order.seller && (
+        {(order.seller || order.seller_id) && (
           <div style={{ background: "#fafafa", border: "1px solid #efefef", borderRadius: 12, padding: 18, marginBottom: 20 }}>
             <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10, color: "#444343" }}>SELLER</div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -171,8 +171,7 @@ export default function Orders() {
       .select(`
         *,
         listings(id, title, price, images, unit_label),
-        seller:profiles!seller_id(full_name, phone),
-        seller_profiles!seller_id(shop_name)
+        seller:profiles!seller_id(full_name, phone)
       `)
       .eq("buyer_id", user.id)
       .order("placed_at", { ascending: false });
@@ -308,7 +307,7 @@ export default function Orders() {
 
                 {/* Actions */}
                 <div style={{ padding: "14px 20px", borderTop: "1px solid #f5f5f5", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ fontSize: 12, color: "#bbb", display: "flex", alignItems: "center", gap: 5 }}>
+                  <div style={{ fontSize: 12, color: "#747573", display: "flex", alignItems: "center", gap: 5 }}>
                     <MapPin size={11} />
                     <span style={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{order.delivery_address}</span>
                   </div>

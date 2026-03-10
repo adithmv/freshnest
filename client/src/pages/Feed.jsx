@@ -49,7 +49,6 @@ export default function Feed() {
   }
 
 async function fetchListings(loc) {
-  console.log("fetchListings called with loc:", loc);
   setLoading(true);
   try {
     const { data: allListings, error } = await supabase
@@ -59,13 +58,58 @@ async function fetchListings(loc) {
       .gt("expires_at", new Date().toISOString())
       .order("created_at", { ascending: false });
 
-    console.log("listings result:", allListings, "error:", error);
+    if (error || !allListings) { setListings([]); setLoading(false); return; }
 
-    if (error || !allListings) {
-      setListings([]);
-      setLoading(false);
-      return;
+    // Fetch seller profiles separately
+    const sellerIds = [...new Set(allListings.map(l => l.seller_id))];
+    const { data: sellers } = await supabase
+      .from("seller_profiles")
+      .select("user_id, shop_name, avg_rating, shop_type, address, lat, lng")
+      .in("user_id", sellerIds);
+
+    function calcDistance(lat1, lng1, lat2, lng2) {
+      const R = 6371000;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+        Math.sin(dLng/2) * Math.sin(dLng/2);
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
+
+    const merged = allListings.map(l => {
+      const seller = sellers?.find(s => s.user_id === l.seller_id) || null;
+      let distance_meters = null;
+
+      // Use listing location if available, else seller profile location
+      if (loc) {
+        if (l.lat && l.lng) {
+          distance_meters = calcDistance(loc.lat, loc.lng, l.lat, l.lng);
+        } else if (seller?.lat && seller?.lng) {
+          distance_meters = calcDistance(loc.lat, loc.lng, seller.lat, seller.lng);
+        }
+      }
+
+      return { ...l, seller_profiles: seller, distance_meters };
+    });
+
+    // If location is set, filter by radius — only show listings with known location within radius
+    // Listings with no location data are shown only if no location is set
+    let filtered = merged;
+    if (loc) {
+      filtered = merged.filter(l =>
+        l.distance_meters !== null && l.distance_meters <= radius
+      );
+      filtered.sort((a, b) => a.distance_meters - b.distance_meters);
+    }
+
+    setListings(filtered);
+  } catch (err) {
+    console.error(err);
+    setListings([]);
+  }
+  setLoading(false);
+}
 
     // Fetch seller profiles separately
     const sellerIds = [...new Set(allListings.map(l => l.seller_id))];

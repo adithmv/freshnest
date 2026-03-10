@@ -31,6 +31,12 @@ export default function SellerDashboard() {
     title: "", description: "", price: "", total_quantity: "",
     unit_label: "packet", is_veg: true, tags: "", expires_at: "",
   });
+  const [sellerAddress, setSellerAddress]           = useState("");
+const [sellerAddressLat, setSellerAddressLat]     = useState(null);
+const [sellerAddressLng, setSellerAddressLng]     = useState(null);
+const [showAddressPicker, setShowAddressPicker]   = useState(false);
+const [savingAddress, setSavingAddress]           = useState(false);
+const [addressSaved, setAddressSaved]             = useState(false);
   
   function urgency(expiresAt) {
   const hrs = (new Date(expiresAt) - new Date()) / 36e5;
@@ -41,16 +47,22 @@ export default function SellerDashboard() {
 }
 
 
-  async function fetchOrders() {
-    setLoading(true);
-    const { data } = await supabase
-      .from("orders")
-      .select("*, listings(title, price), profiles!buyer_id(full_name, phone)")
-      .eq("seller_id", user.id)
-      .order("placed_at", { ascending: false });
-    setOrders(data || []);
-    setLoading(false);
-  }
+async function fetchOrders() {
+  setLoading(true);
+  const { data, error } = await supabase
+    .from("orders")
+    .select(`
+      *,
+      listings(id, title, price, images, unit_label),
+      seller:profiles!seller_id(full_name, phone)
+    `)
+    .eq("buyer_id", user.id)
+    .order("placed_at", { ascending: false });
+
+  console.log("orders:", data, "error:", error);
+  setOrders(data || []);
+  setLoading(false);
+}
 
   async function fetchListings() {
     const { data } = await supabase
@@ -65,6 +77,7 @@ export default function SellerDashboard() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchOrders();
     fetchListings();
+    fetchSellerAddress();
     getCurrentLocation().then(setSellerLocation).catch(() => {});
   }
 }, [user]);
@@ -81,6 +94,34 @@ export default function SellerDashboard() {
     await supabase.from("listings").update({ status: "removed" }).eq("id", id);
     fetchListings();
   }
+
+  async function fetchSellerAddress() {
+  const { data } = await supabase
+    .from("seller_profiles")
+    .select("address, lat, lng")
+    .eq("user_id", user.id)
+    .single();
+  if (data) {
+    setSellerAddress(data.address || "");
+    setSellerAddressLat(data.lat || null);
+    setSellerAddressLng(data.lng || null);
+  }
+}
+
+async function saveSellerAddress() {
+  setSavingAddress(true);
+  await supabase
+    .from("seller_profiles")
+    .upsert({
+      user_id: user.id,
+      address: sellerAddress,
+      lat: sellerAddressLat,
+      lng: sellerAddressLng,
+    }, { onConflict: "user_id" });
+  setSavingAddress(false);
+  setAddressSaved(true);
+  setTimeout(() => setAddressSaved(false), 3000);
+}
 
   function handleImageChange(e) {
     const file = e.target.files[0];
@@ -105,12 +146,12 @@ export default function SellerDashboard() {
   }
 
   async function submitListing(e) {
-    e.preventDefault();
-    setFormErr("");
-    if (!form.title || !form.price || !form.total_quantity || !form.expires_at) {
-      return setFormErr("Please fill all required fields");
-    }
-    setSubmitting(true);
+  e.preventDefault();
+  setFormErr("");
+  if (!form.title || !form.price || !form.total_quantity || !form.expires_at) {
+    return setFormErr("Please fill all required fields");
+  }
+  setSubmitting(true);
 
     // Insert listing first to get the ID
 
@@ -128,6 +169,8 @@ const { data: listing, error } = await supabase.from("listings").insert({
   status:         "active",
   location:       listingLocation ? `POINT(${listingLocation.lng} ${listingLocation.lat})` : null,
   address_hint:   listingLocation?.address?.slice(0, 100) || null,
+  lat:            listingLocation?.lat || null,
+  lng:            listingLocation?.lng || null,
 }).select().single();
 
     // Upload image if selected
@@ -212,6 +255,45 @@ const { data: listing, error } = await supabase.from("listings").insert({
             );
           })}
         </div>
+        {/* Shop Address */}
+<div style={{ background: "white", border: "1px solid #efefef", borderRadius: 14, padding: 22, marginBottom: 28 }}>
+  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+    <div>
+      <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 3 }}>Shop Address</h3>
+      <p style={{ fontSize: 12, color: "#aaa" }}>Buyers will see listings near this location</p>
+    </div>
+    {addressSaved && (
+      <div style={{ fontSize: 12, color: "#27ae60", display: "flex", alignItems: "center", gap: 5 }}>
+        <Check size={13} /> Saved
+      </div>
+    )}
+  </div>
+  <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+    <button
+      onClick={() => setShowAddressPicker(true)}
+      style={{ display: "flex", alignItems: "center", gap: 7, border: `1.5px solid ${sellerAddressLat ? "#27ae60" : "#e8e8e8"}`, borderRadius: 8, padding: "9px 14px", fontSize: 13, cursor: "pointer", background: sellerAddressLat ? "#f0faf4" : "white", color: sellerAddressLat ? "#27ae60" : "#aaa", fontFamily: "inherit" }}
+    >
+      <MapPin size={13} color={sellerAddressLat ? "#27ae60" : "#aaa"} />
+      {sellerAddressLat ? "Location pinned" : "Pin on map"}
+    </button>
+  </div>
+  <div style={{ display: "flex", gap: 10 }}>
+    <input
+      className="form-input"
+      placeholder="Enter your shop address..."
+      value={sellerAddress}
+      onChange={e => setSellerAddress(e.target.value)}
+      style={{ flex: 1 }}
+    />
+    <button
+      onClick={saveSellerAddress}
+      disabled={savingAddress}
+      style={{ background: "#111", color: "white", border: "none", borderRadius: 8, padding: "10px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}
+    >
+      {savingAddress ? "Saving..." : "Save"}
+    </button>
+  </div>
+</div>
 
         {/* Tabs */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #f2f2f2", marginBottom: 24 }}>
@@ -402,6 +484,7 @@ const { data: listing, error } = await supabase.from("listings").insert({
   value={form.expires_at}
   onChange={e => setForm(p => ({ ...p, expires_at: e.target.value }))}
   min={new Date().toISOString().slice(0, 16)}
+  // eslint-disable-next-line react-hooks/purity
   max={new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16)}
   className="form-input"
 />
@@ -446,6 +529,18 @@ const { data: listing, error } = await supabase.from("listings").insert({
     value={listingLocation}
     onChange={loc => setListingLocation(loc)}
     onClose={() => setShowLocationPicker(false)}
+  />
+      )}
+      {showAddressPicker && (
+  <LocationPicker
+    value={sellerAddressLat ? { lat: sellerAddressLat, lng: sellerAddressLng } : null}
+    onChange={loc => {
+      setSellerAddressLat(loc.lat);
+      setSellerAddressLng(loc.lng);
+      setSellerAddress(loc.address || sellerAddress);
+      setShowAddressPicker(false);
+    }}
+    onClose={() => setShowAddressPicker(false)}
   />
 )}
     </div>
