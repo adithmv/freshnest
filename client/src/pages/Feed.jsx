@@ -117,7 +117,7 @@ async function fetchListings(loc) {
         .listing-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.08); }
         .filter-btn { border: 1px solid #e8e8e8; border-radius: 20px; padding: 7px 16px; font-size: 13px; font-family: inherit; cursor: pointer; transition: all 0.15s; background: white; color: #555; white-space: nowrap; }
         .filter-btn.active { background: #111; color: white; border-color: #111; }
-        .filter-btn:hover:not(.active) { border-color: #aaa; }
+        .filter-btn:hover:not(.active) { border-color: #494848; }
         .add-btn { background: #111; color: white; border: none; border-radius: 7px; padding: 8px 16px; font-size: 13px; font-family: inherit; font-weight: 500; cursor: pointer; transition: background 0.15s; }
         .add-btn:hover { background: #333; }
         .add-btn.added { background: #27ae60; }
@@ -140,7 +140,7 @@ async function fetchListings(loc) {
           </Link>
 
           <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, background: "#f5f5f5", borderRadius: 8, padding: "9px 14px", maxWidth: 400 }}>
-            <Search size={14} color="#aaa" />
+            <Search size={14} color="#494848" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -152,17 +152,17 @@ async function fetchListings(loc) {
           {/* Location indicator */}
           <button
   onClick={() => setShowLocationPicker(true)}
-  style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "1px solid #e8e8e8", borderRadius: 8, padding: "7px 12px", fontSize: 12, cursor: "pointer", color: userLocation ? "#27ae60" : "#aaa", fontFamily: "inherit", flexShrink: 0 }}
+  style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "1px solid #e8e8e8", borderRadius: 8, padding: "7px 12px", fontSize: 12, cursor: "pointer", color: userLocation ? "#27ae60" : "#494848", fontFamily: "inherit", flexShrink: 0 }}
 >
-  <Navigation size={12} color={userLocation ? "#27ae60" : "#aaa"} />
+  <Navigation size={12} color={userLocation ? "#27ae60" : "#494848"} />
   {userLocation ? "Location on" : "Set location"}
 </button>
 
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
             {user ? (
               <>
-                <span style={{ fontSize: 13, color: "#888" }}>{profile?.full_name}</span>
-                <button onClick={signOut} style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa", display: "flex" }}>
+                <span style={{ fontSize: 13, color: "#444343" }}>{profile?.full_name}</span>
+                <button onClick={signOut} style={{ background: "none", border: "none", cursor: "pointer", color: "#494848", display: "flex" }}>
                   <LogOut size={16} />
                 </button>
               </>
@@ -290,13 +290,13 @@ async function fetchListings(loc) {
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
                       <div>
                         <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>{listing.title}</div>
-                        <div style={{ fontSize: 12, color: "#aaa" }}>{listing.seller_profiles?.shop_name}</div>
+                        <div style={{ fontSize: 12, color: "#494848" }}>{listing.seller_profiles?.shop_name}</div>
                       </div>
                       <div style={{ fontFamily: "Playfair Display, serif", fontSize: 18, fontWeight: 700, flexShrink: 0 }}>₹{listing.price}</div>
                     </div>
 
                     {listing.description && (
-                      <p style={{ fontSize: 13, color: "#888", lineHeight: 1.5, marginBottom: 10, fontWeight: 300, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                      <p style={{ fontSize: 13, color: "#444343", lineHeight: 1.5, marginBottom: 10, fontWeight: 300, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                         {listing.description}
                       </p>
                     )}
@@ -312,7 +312,7 @@ async function fetchListings(loc) {
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
                         <Star size={11} color="#e8a020" fill="#e8a020" />
-                        <span style={{ fontSize: 12, color: "#888" }}>{listing.seller_profiles?.avg_rating || "New"}</span>
+                        <span style={{ fontSize: 12, color: "#444343" }}>{listing.seller_profiles?.avg_rating || "New"}</span>
                       </div>
                       <button className={`add-btn ${inCart ? "added" : ""}`} onClick={() => addToCart(listing)}>
                         {inCart ? "Added" : "Add to cart"}

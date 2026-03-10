@@ -33,7 +33,7 @@ function TrackOrder({ order, onClose }) {
             <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: 22, fontWeight: 700, marginBottom: 4 }}>Track Order</h2>
             <div style={{ fontSize: 12, color: "#bbb" }}>Order #{order.id.slice(0, 8).toUpperCase()}</div>
           </div>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa", padding: 4 }}>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#494848", padding: 4 }}>
             <X size={22} />
           </button>
         </div>
@@ -45,7 +45,7 @@ function TrackOrder({ order, onClose }) {
           </div>
           <div>
             <div style={{ fontSize: 16, fontWeight: 700, color: meta.color }}>{meta.label}</div>
-            <div style={{ fontSize: 13, color: "#888", marginTop: 2 }}>{meta.desc}</div>
+            <div style={{ fontSize: 13, color: "#444343", marginTop: 2 }}>{meta.desc}</div>
           </div>
         </div>
 
@@ -80,7 +80,7 @@ function TrackOrder({ order, onClose }) {
                       {sm.label}
                     </div>
                     {current && (
-                      <div style={{ fontSize: 12, color: "#888" }}>{sm.desc}</div>
+                      <div style={{ fontSize: 12, color: "#444343" }}>{sm.desc}</div>
                     )}
                   </div>
                 </div>
@@ -91,7 +91,7 @@ function TrackOrder({ order, onClose }) {
 
         {/* Order details */}
         <div style={{ background: "#fafafa", border: "1px solid #efefef", borderRadius: 12, padding: 18, marginBottom: 20 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, color: "#888" }}>ORDER DETAILS</div>
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, color: "#444343" }}>ORDER DETAILS</div>
           <div style={{ display: "flex", gap: 12, marginBottom: 14, alignItems: "center" }}>
             <div style={{ width: 48, height: 48, borderRadius: 8, background: "#f0ece6", overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
               {order.listings?.images?.[0]
@@ -101,11 +101,11 @@ function TrackOrder({ order, onClose }) {
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 15, fontWeight: 600 }}>{order.listings?.title}</div>
-              <div style={{ fontSize: 12, color: "#aaa", marginTop: 2 }}>Qty: {order.quantity} {order.listings?.unit_label || "packet"}</div>
+              <div style={{ fontSize: 12, color: "#494848", marginTop: 2 }}>Qty: {order.quantity} {order.listings?.unit_label || "packet"}</div>
             </div>
             <div style={{ fontFamily: "Playfair Display, serif", fontSize: 18, fontWeight: 700 }}>₹{order.total_amount}</div>
           </div>
-          <div style={{ display: "flex", gap: 6, alignItems: "flex-start", fontSize: 13, color: "#888" }}>
+          <div style={{ display: "flex", gap: 6, alignItems: "flex-start", fontSize: 13, color: "#444343" }}>
             <MapPin size={13} style={{ flexShrink: 0, marginTop: 1 }} />
             <span>{order.delivery_address}</span>
           </div>
@@ -114,11 +114,11 @@ function TrackOrder({ order, onClose }) {
         {/* Seller info */}
         {order.seller && (
           <div style={{ background: "#fafafa", border: "1px solid #efefef", borderRadius: 12, padding: 18, marginBottom: 20 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10, color: "#888" }}>SELLER</div>
+            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10, color: "#444343" }}>SELLER</div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 500 }}>{order.seller.full_name}</div>
-                <div style={{ fontSize: 12, color: "#aaa" }}>{order.seller_profiles?.shop_name}</div>
+                <div style={{ fontSize: 12, color: "#494848" }}>{order.seller_profiles?.shop_name}</div>
               </div>
               {order.seller.phone && (
                 <a href={`tel:${order.seller.phone}`} style={{ display: "flex", alignItems: "center", gap: 6, background: "#111", color: "white", borderRadius: 8, padding: "8px 14px", fontSize: 13, textDecoration: "none" }}>
@@ -196,14 +196,14 @@ export default function Orders() {
         * { box-sizing: border-box; margin: 0; padding: 0; }
         .order-card { background: white; border: 1px solid #efefef; border-radius: 14px; overflow: hidden; margin-bottom: 14px; transition: box-shadow 0.2s; }
         .order-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
-        .tab-btn { background: none; border: none; font-size: 14px; font-family: inherit; cursor: pointer; color: #aaa; border-bottom: 2px solid transparent; padding-bottom: 12px; transition: all 0.15s; }
+        .tab-btn { background: none; border: none; font-size: 14px; font-family: inherit; cursor: pointer; color: #494848; border-bottom: 2px solid transparent; padding-bottom: 12px; transition: all 0.15s; }
         .tab-btn.active { color: #111; border-bottom-color: #111; font-weight: 600; }
       `}</style>
 
       {/* Nav */}
       <nav style={{ background: "white", borderBottom: "1px solid #efefef", padding: "0 32px", position: "sticky", top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: 680, margin: "0 auto", display: "flex", alignItems: "center", height: 60, gap: 16 }}>
-          <button onClick={() => navigate(-1)} style={{ background: "none", border: "none", cursor: "pointer", color: "#888", display: "flex", alignItems: "center", gap: 6, fontSize: 14, fontFamily: "inherit" }}>
+          <button onClick={() => navigate(-1)} style={{ background: "none", border: "none", cursor: "pointer", color: "#444343", display: "flex", alignItems: "center", gap: 6, fontSize: 14, fontFamily: "inherit" }}>
             <ArrowLeft size={16} /> Back
           </button>
           <span style={{ color: "#e8e8e8" }}>|</span>
@@ -221,7 +221,7 @@ export default function Orders() {
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
           <h1 style={{ fontFamily: "Playfair Display, serif", fontSize: 26, fontWeight: 700 }}>My Orders</h1>
-          <button onClick={fetchOrders} style={{ background: "none", border: "1px solid #e8e8e8", borderRadius: 8, padding: "7px 12px", cursor: "pointer", color: "#888", display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontFamily: "inherit" }}>
+          <button onClick={fetchOrders} style={{ background: "none", border: "1px solid #e8e8e8", borderRadius: 8, padding: "7px 12px", cursor: "pointer", color: "#444343", display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontFamily: "inherit" }}>
             <RefreshCw size={13} /> Refresh
           </button>
         </div>
@@ -277,7 +277,7 @@ export default function Orders() {
                     </div>
                     <div>
                       <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 3 }}>{order.listings?.title}</div>
-                      <div style={{ fontSize: 12, color: "#aaa" }}>
+                      <div style={{ fontSize: 12, color: "#494848" }}>
                         {order.seller?.full_name} · Qty {order.quantity}
                       </div>
                       <div style={{ fontSize: 11, color: "#ccc", marginTop: 3 }}>
@@ -302,7 +302,7 @@ export default function Orders() {
                         <div key={s} style={{ flex: 1, height: 3, borderRadius: 2, background: i <= stepIndex ? "#111" : "#e8e8e8", transition: "background 0.3s" }} />
                       ))}
                     </div>
-                    <div style={{ fontSize: 12, color: "#888", marginTop: 6 }}>{meta.desc}</div>
+                    <div style={{ fontSize: 12, color: "#444343", marginTop: 6 }}>{meta.desc}</div>
                   </div>
                 )}
 

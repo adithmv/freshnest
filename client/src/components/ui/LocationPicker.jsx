@@ -117,9 +117,9 @@ export default function LocationPicker({ value, onChange, onClose }) {
         <div style={{ padding: "20px 24px", borderBottom: "1px solid #f2f2f2", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: 19, fontWeight: 700 }}>Set location</h2>
-            <p style={{ fontSize: 13, color: "#aaa", marginTop: 3 }}>Click on the map or drag the pin to set your location</p>
+            <p style={{ fontSize: 13, color: "#494848", marginTop: 3 }}>Click on the map or drag the pin to set your location</p>
           </div>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa" }}>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#494848" }}>
             <X size={20} />
           </button>
         </div>
@@ -128,7 +128,7 @@ export default function LocationPicker({ value, onChange, onClose }) {
         <div style={{ padding: "14px 24px", borderBottom: "1px solid #f2f2f2", position: "relative" }}>
           <form onSubmit={handleSearch} style={{ display: "flex", gap: 8 }}>
             <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, border: "1px solid #e8e8e8", borderRadius: 8, padding: "9px 14px" }}>
-              <Search size={14} color="#aaa" />
+              <Search size={14} color="#494848" />
               <input
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
@@ -156,7 +156,7 @@ export default function LocationPicker({ value, onChange, onClose }) {
                   onMouseEnter={e => e.currentTarget.style.background = "#fafafa"}
                   onMouseLeave={e => e.currentTarget.style.background = "white"}
                 >
-                  <MapPin size={13} color="#aaa" style={{ marginTop: 1, flexShrink: 0 }} />
+                  <MapPin size={13} color="#494848" style={{ marginTop: 1, flexShrink: 0 }} />
                   <span>{r.display_name}</span>
                 </div>
               ))}
@@ -201,7 +201,7 @@ export default function LocationPicker({ value, onChange, onClose }) {
             <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 14 }}>
               <MapPin size={14} color="#c9521e" style={{ marginTop: 2, flexShrink: 0 }} />
               <div>
-                <div style={{ fontSize: 11, color: "#aaa", marginBottom: 2 }}>Selected location</div>
+                <div style={{ fontSize: 11, color: "#494848", marginBottom: 2 }}>Selected location</div>
                 <div style={{ fontSize: 13, color: "#444", lineHeight: 1.5 }}>
                   {loadingAddress ? "Getting address..." : address}
                 </div>

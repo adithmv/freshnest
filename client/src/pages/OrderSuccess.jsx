@@ -55,14 +55,14 @@ export default function OrderSuccess() {
         <h1 className="fade-up" style={{ fontFamily: "Playfair Display, serif", fontSize: 32, fontWeight: 700, marginBottom: 12, animationDelay: "0.1s" }}>
           Order placed!
         </h1>
-        <p className="fade-up" style={{ fontSize: 15, color: "#888", lineHeight: 1.7, marginBottom: 36, animationDelay: "0.2s" }}>
+        <p className="fade-up" style={{ fontSize: 15, color: "#444343", lineHeight: 1.7, marginBottom: 36, animationDelay: "0.2s" }}>
           Your order has been confirmed. A delivery person will pick it up and bring it to your door shortly.
         </p>
 
         {/* Latest orders */}
         {latestOrders.length > 0 && (
           <div className="fade-up" style={{ background: "white", border: "1px solid #efefef", borderRadius: 14, padding: 20, marginBottom: 28, textAlign: "left", animationDelay: "0.3s" }}>
-            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 14, color: "#888" }}>Items ordered</h3>
+            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 14, color: "#444343" }}>Items ordered</h3>
             {latestOrders.map(order => (
               <div key={order.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #f5f5f5" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -74,7 +74,7 @@ export default function OrderSuccess() {
                   </div>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 500 }}>{order.listings?.title}</div>
-                    <div style={{ fontSize: 11, color: "#aaa" }}>Qty: {order.quantity}</div>
+                    <div style={{ fontSize: 11, color: "#494848" }}>Qty: {order.quantity}</div>
                   </div>
                 </div>
                 <div style={{ fontSize: 14, fontWeight: 600 }}>₹{order.total_amount}</div>

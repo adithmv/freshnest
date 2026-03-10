@@ -86,7 +86,7 @@ export default function ListingDetail() {
       {/* Nav */}
       <nav style={{ background: "white", borderBottom: "1px solid #efefef", padding: "0 32px", position: "sticky", top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: 1080, margin: "0 auto", display: "flex", alignItems: "center", height: 60, gap: 16 }}>
-          <button onClick={() => navigate(-1)} style={{ background: "none", border: "none", cursor: "pointer", color: "#888", display: "flex", alignItems: "center", gap: 6, fontSize: 14, fontFamily: "inherit" }}>
+          <button onClick={() => navigate(-1)} style={{ background: "none", border: "none", cursor: "pointer", color: "#444343", display: "flex", alignItems: "center", gap: 6, fontSize: 14, fontFamily: "inherit" }}>
             <ArrowLeft size={16} /> Back
           </button>
           <span style={{ color: "#e8e8e8" }}>|</span>
@@ -123,20 +123,20 @@ export default function ListingDetail() {
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-              <span style={{ fontSize: 14, color: "#888" }}>{listing.seller_profiles?.shop_name}</span>
+              <span style={{ fontSize: 14, color: "#444343" }}>{listing.seller_profiles?.shop_name}</span>
               {listing.seller_profiles?.avg_rating > 0 && (
                 <>
                   <span style={{ color: "#e8e8e8" }}>·</span>
                   <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                     <Star size={13} color="#e8a020" fill="#e8a020" />
-                    <span style={{ fontSize: 13, color: "#888" }}>{listing.seller_profiles.avg_rating}</span>
+                    <span style={{ fontSize: 13, color: "#444343" }}>{listing.seller_profiles.avg_rating}</span>
                   </div>
                 </>
               )}
               {listing.categories?.name && (
                 <>
                   <span style={{ color: "#e8e8e8" }}>·</span>
-                  <span style={{ fontSize: 13, color: "#aaa" }}>{listing.categories.name}</span>
+                  <span style={{ fontSize: 13, color: "#494848" }}>{listing.categories.name}</span>
                 </>
               )}
             </div>
@@ -147,7 +147,7 @@ export default function ListingDetail() {
               <span style={{ fontSize: 13, color: u.color, fontWeight: 500 }}>
                 Expires {new Date(listing.expires_at).toLocaleString("en-IN", { weekday: "short", hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" })}
               </span>
-              <span style={{ marginLeft: "auto", fontSize: 13, color: "#aaa" }}>{listing.available_qty} of {listing.total_quantity} left</span>
+              <span style={{ marginLeft: "auto", fontSize: 13, color: "#494848" }}>{listing.available_qty} of {listing.total_quantity} left</span>
             </div>
 
             {/* Description */}
@@ -174,7 +174,7 @@ export default function ListingDetail() {
             {listing.seller_profiles?.description && (
               <div style={{ background: "white", border: "1px solid #efefef", borderRadius: 12, padding: 20, marginBottom: 28 }}>
                 <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>About the seller</h3>
-                <p style={{ fontSize: 13, color: "#888", lineHeight: 1.7, fontWeight: 300 }}>{listing.seller_profiles.description}</p>
+                <p style={{ fontSize: 13, color: "#444343", lineHeight: 1.7, fontWeight: 300 }}>{listing.seller_profiles.description}</p>
               </div>
             )}
 
@@ -193,7 +193,7 @@ export default function ListingDetail() {
                           ))}
                         </div>
                       </div>
-                      {r.comment && <p style={{ fontSize: 13, color: "#888", lineHeight: 1.6, fontWeight: 300 }}>{r.comment}</p>}
+                      {r.comment && <p style={{ fontSize: 13, color: "#444343", lineHeight: 1.6, fontWeight: 300 }}>{r.comment}</p>}
                       <p style={{ fontSize: 11, color: "#ccc", marginTop: 6 }}>{new Date(r.created_at).toLocaleDateString("en-IN")}</p>
                     </div>
                   ))}
@@ -243,11 +243,11 @@ export default function ListingDetail() {
 
             {/* Total */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 0", borderTop: "1px solid #f2f2f2", borderBottom: "1px solid #f2f2f2", marginBottom: 16 }}>
-              <span style={{ fontSize: 14, color: "#888" }}>Total</span>
+              <span style={{ fontSize: 14, color: "#444343" }}>Total</span>
               <span style={{ fontFamily: "Playfair Display, serif", fontSize: 22, fontWeight: 700 }}>₹{total}</span>
             </div>
 
-            <div style={{ fontSize: 12, color: "#aaa", marginBottom: 16, display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ fontSize: 12, color: "#494848", marginBottom: 16, display: "flex", alignItems: "center", gap: 6 }}>
               <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#27ae60" }} />
               Cash on delivery
             </div>
@@ -262,7 +262,7 @@ export default function ListingDetail() {
             </button>
 
             {!user && (
-              <p style={{ fontSize: 12, color: "#aaa", textAlign: "center", marginTop: 12 }}>
+              <p style={{ fontSize: 12, color: "#494848", textAlign: "center", marginTop: 12 }}>
                 <Link to="/login" style={{ color: "#111", fontWeight: 500 }}>Log in</Link> to place an order
               </p>
             )}
@@ -278,7 +278,7 @@ export default function ListingDetail() {
               <ShoppingBag size={22} color="#27ae60" />
             </div>
             <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: 22, fontWeight: 700, marginBottom: 10 }}>Order placed</h2>
-            <p style={{ fontSize: 14, color: "#888", lineHeight: 1.7, marginBottom: 24 }}>
+            <p style={{ fontSize: 14, color: "#444343", lineHeight: 1.7, marginBottom: 24 }}>
               Your order for {qty} {listing.unit_label} of {listing.title} is confirmed. Pay ₹{total} cash on delivery.
             </p>
             <div style={{ display: "flex", gap: 10 }}>

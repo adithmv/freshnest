@@ -33,17 +33,17 @@ export default function Cart() {
             <span style={{ fontFamily: "Playfair Display, serif", fontSize: 17, fontWeight: 700 }}>FreshNest</span>
           </Link>
           <span style={{ color: "#e8e8e8" }}>|</span>
-          <span style={{ fontSize: 14, color: "#888" }}>Your Cart</span>
+          <span style={{ fontSize: 14, color: "#444343" }}>Your Cart</span>
         </div>
       </nav>
 
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "36px 32px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
           <h1 style={{ fontFamily: "Playfair Display, serif", fontSize: 26, fontWeight: 700 }}>
-            Your Cart {itemCount > 0 && <span style={{ fontSize: 16, color: "#aaa", fontWeight: 400 }}>({itemCount} items)</span>}
+            Your Cart {itemCount > 0 && <span style={{ fontSize: 16, color: "#494848", fontWeight: 400 }}>({itemCount} items)</span>}
           </h1>
           {cart.length > 0 && (
-            <button onClick={clearCart} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "#aaa", cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>
+            <button onClick={clearCart} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "#494848", cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>
               <Trash2 size={14} /> Clear cart
             </button>
           )}
@@ -76,7 +76,7 @@ export default function Cart() {
                   {/* Details */}
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 3 }}>{item.title}</div>
-                    <div style={{ fontSize: 12, color: "#aaa", marginBottom: 10 }}>{item.seller_profiles?.shop_name}</div>
+                    <div style={{ fontSize: 12, color: "#494848", marginBottom: 10 }}>{item.seller_profiles?.shop_name}</div>
 
                     {/* Qty controls */}
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -119,17 +119,17 @@ export default function Cart() {
 
               {cart.map(item => (
                 <div key={item.id} style={{ display: "flex", justifyContent: "space-between", marginBottom: 10, fontSize: 13 }}>
-                  <span style={{ color: "#888" }}>{item.title} x{item.qty}</span>
+                  <span style={{ color: "#444343" }}>{item.title} x{item.qty}</span>
                   <span style={{ fontWeight: 500 }}>₹{item.price * item.qty}</span>
                 </div>
               ))}
 
               <div style={{ borderTop: "1px solid #f2f2f2", marginTop: 14, paddingTop: 14, marginBottom: 6 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 13, color: "#888" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 13, color: "#444343" }}>
                   <span>Subtotal</span>
                   <span>₹{total}</span>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 13, color: "#888" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 13, color: "#444343" }}>
                   <span>Delivery</span>
                   <span style={{ color: "#27ae60" }}>Free</span>
                 </div>
@@ -149,7 +149,7 @@ export default function Cart() {
                 Proceed to checkout <ArrowRight size={15} />
               </button>
 
-              <Link to="/browse" style={{ display: "block", textAlign: "center", marginTop: 14, fontSize: 13, color: "#aaa", textDecoration: "none" }}>
+              <Link to="/browse" style={{ display: "block", textAlign: "center", marginTop: 14, fontSize: 13, color: "#494848", textDecoration: "none" }}>
                 Continue browsing
               </Link>
             </div>

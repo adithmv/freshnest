@@ -95,7 +95,7 @@ export default function Checkout() {
       {/* Nav */}
       <nav style={{ background: "white", borderBottom: "1px solid #efefef", padding: "0 32px", position: "sticky", top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", alignItems: "center", height: 60, gap: 16 }}>
-          <Link to="/cart" style={{ display: "flex", alignItems: "center", gap: 6, textDecoration: "none", color: "#888", fontSize: 14 }}>
+          <Link to="/cart" style={{ display: "flex", alignItems: "center", gap: 6, textDecoration: "none", color: "#444343", fontSize: 14 }}>
             <ArrowLeft size={16} /> Cart
           </Link>
           <span style={{ color: "#e8e8e8" }}>|</span>
@@ -106,7 +106,7 @@ export default function Checkout() {
             <span style={{ fontFamily: "Playfair Display, serif", fontSize: 17, fontWeight: 700 }}>FreshNest</span>
           </Link>
           <span style={{ color: "#e8e8e8" }}>|</span>
-          <span style={{ fontSize: 14, color: "#888" }}>Checkout</span>
+          <span style={{ fontSize: 14, color: "#444343" }}>Checkout</span>
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#bbb" }}>
             <Lock size={11} /> Secure checkout
           </div>
@@ -118,7 +118,7 @@ export default function Checkout() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(255,255,255,0.95)", zIndex: 300, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20 }}>
           <div className="spinner" />
           <p style={{ fontFamily: "Playfair Display, serif", fontSize: 20, fontWeight: 700 }}>Processing your order...</p>
-          <p style={{ fontSize: 14, color: "#aaa" }}>Please do not close this page</p>
+          <p style={{ fontSize: 14, color: "#494848" }}>Please do not close this page</p>
         </div>
       )}
 
@@ -129,8 +129,8 @@ export default function Checkout() {
           {[["1", "Delivery"], ["2", "Payment"]].map(([num, label], i) => (
             <div key={num} style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 28, height: 28, borderRadius: "50%", background: step >= parseInt(num) ? "#111" : "#e8e8e8", color: step >= parseInt(num) ? "white" : "#aaa", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>{num}</div>
-                <span style={{ fontSize: 13, fontWeight: step === parseInt(num) ? 600 : 400, color: step >= parseInt(num) ? "#111" : "#aaa" }}>{label}</span>
+                <div style={{ width: 28, height: 28, borderRadius: "50%", background: step >= parseInt(num) ? "#111" : "#e8e8e8", color: step >= parseInt(num) ? "white" : "#494848", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>{num}</div>
+                <span style={{ fontSize: 13, fontWeight: step === parseInt(num) ? 600 : 400, color: step >= parseInt(num) ? "#111" : "#494848" }}>{label}</span>
               </div>
               {i < 1 && <div style={{ width: 40, height: 1, background: "#e8e8e8" }} />}
             </div>
@@ -154,9 +154,9 @@ export default function Checkout() {
                   <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 8 }}>Pin your location on map</label>
                   <button
                     onClick={() => setShowMap(true)}
-                    style={{ width: "100%", border: `1.5px solid ${location ? "#27ae60" : "#e8e8e8"}`, borderRadius: 8, padding: "11px 14px", fontSize: 14, fontFamily: "inherit", cursor: "pointer", background: location ? "#f0faf4" : "white", display: "flex", alignItems: "center", gap: 8, color: location ? "#27ae60" : "#aaa", transition: "all 0.15s" }}
+                    style={{ width: "100%", border: `1.5px solid ${location ? "#27ae60" : "#e8e8e8"}`, borderRadius: 8, padding: "11px 14px", fontSize: 14, fontFamily: "inherit", cursor: "pointer", background: location ? "#f0faf4" : "white", display: "flex", alignItems: "center", gap: 8, color: location ? "#27ae60" : "#494848", transition: "all 0.15s" }}
                   >
-                    <MapPin size={15} color={location ? "#27ae60" : "#aaa"} />
+                    <MapPin size={15} color={location ? "#27ae60" : "#494848"} />
                     {location ? location.address?.slice(0, 55) + "..." : "Set delivery location on map"}
                   </button>
                 </div>
@@ -178,7 +178,7 @@ export default function Checkout() {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 24 }}>
                   <div>
                     <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 6 }}>Name</label>
-                    <input className="form-input" defaultValue={profile?.full_name} readOnly style={{ background: "#fafafa", color: "#888" }} />
+                    <input className="form-input" defaultValue={profile?.full_name} readOnly style={{ background: "#fafafa", color: "#444343" }} />
                   </div>
                   <div>
                     <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 6 }}>Phone</label>
@@ -199,7 +199,7 @@ export default function Checkout() {
             {step === 2 && (
               <div style={{ background: "white", border: "1px solid #efefef", borderRadius: 14, padding: 28 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 22 }}>
-                  <button onClick={() => setStep(1)} style={{ background: "none", border: "none", cursor: "pointer", color: "#888", display: "flex" }}><ArrowLeft size={18} /></button>
+                  <button onClick={() => setStep(1)} style={{ background: "none", border: "none", cursor: "pointer", color: "#444343", display: "flex" }}><ArrowLeft size={18} /></button>
                   <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: 20, fontWeight: 700 }}>Payment method</h2>
                 </div>
 
@@ -212,11 +212,11 @@ export default function Checkout() {
                     return (
                       <div key={pm.id} className={`pay-option ${paymentMethod === pm.id ? "selected" : ""}`} onClick={() => setPaymentMethod(pm.id)}>
                         <div style={{ width: 38, height: 38, background: paymentMethod === pm.id ? "#111" : "#f5f5f5", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.15s" }}>
-                          <Icon size={18} color={paymentMethod === pm.id ? "white" : "#888"} strokeWidth={1.5} />
+                          <Icon size={18} color={paymentMethod === pm.id ? "white" : "#444343"} strokeWidth={1.5} />
                         </div>
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: 14, fontWeight: 500 }}>{pm.label}</div>
-                          <div style={{ fontSize: 12, color: "#aaa" }}>{pm.desc}</div>
+                          <div style={{ fontSize: 12, color: "#494848" }}>{pm.desc}</div>
                         </div>
                         <div style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${paymentMethod === pm.id ? "#111" : "#ddd"}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                           {paymentMethod === pm.id && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#111" }} />}
@@ -241,7 +241,7 @@ export default function Checkout() {
                       <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 6 }}>UPI ID</label>
                       <input className="form-input" placeholder="yourname@upi" value={upiId} onChange={e => setUpiId(e.target.value)} />
                     </div>
-                    <div style={{ marginTop: 12, padding: "10px 14px", background: "#fff8e8", border: "1px solid #f0e0a0", borderRadius: 8, fontSize: 12, color: "#888" }}>
+                    <div style={{ marginTop: 12, padding: "10px 14px", background: "#fff8e8", border: "1px solid #f0e0a0", borderRadius: 8, fontSize: 12, color: "#444343" }}>
                       A payment request of ₹{total} will be sent to your {upiApp} app
                     </div>
                   </div>
@@ -303,13 +303,13 @@ export default function Checkout() {
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, fontWeight: 500 }}>{item.title}</div>
-                  <div style={{ fontSize: 11, color: "#aaa" }}>x{item.qty}</div>
+                  <div style={{ fontSize: 11, color: "#494848" }}>x{item.qty}</div>
                 </div>
                 <div style={{ fontSize: 14, fontWeight: 600 }}>₹{item.price * item.qty}</div>
               </div>
             ))}
             <div style={{ borderTop: "1px solid #f2f2f2", paddingTop: 14, marginTop: 4 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#888", marginBottom: 6 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#444343", marginBottom: 6 }}>
                 <span>Subtotal</span><span>₹{total}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#27ae60", marginBottom: 14 }}>

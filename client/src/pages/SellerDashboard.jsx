@@ -31,7 +31,14 @@ export default function SellerDashboard() {
     title: "", description: "", price: "", total_quantity: "",
     unit_label: "packet", is_veg: true, tags: "", expires_at: "",
   });
-
+  
+  function urgency(expiresAt) {
+  const hrs = (new Date(expiresAt) - new Date()) / 36e5;
+  if (hrs <= 0)  return { color: "#bbb",    bg: "#f5f5f5" };
+  if (hrs <= 1)  return { color: "#c0392b", bg: "#fff5f5" };
+  if (hrs <= 3)  return { color: "#d35400", bg: "#fff8f0" };
+  return           { color: "#27ae60", bg: "#f0faf4" };
+}
 
 
   async function fetchOrders() {
@@ -149,7 +156,7 @@ const { data: listing, error } = await supabase.from("listings").insert({
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        .tab-btn { background: none; border: none; font-size: 14px; font-family: inherit; cursor: pointer; color: #aaa; border-bottom: 2px solid transparent; transition: all 0.15s; padding-bottom: 12px; }
+        .tab-btn { background: none; border: none; font-size: 14px; font-family: inherit; cursor: pointer; color: #494848; border-bottom: 2px solid transparent; transition: all 0.15s; padding-bottom: 12px; }
         .tab-btn.active { color: #111; border-bottom-color: #111; }
         .order-card { background: white; border: 1px solid #efefef; border-radius: 12px; padding: 20px; margin-bottom: 14px; }
         .listing-card { background: white; border: 1px solid #efefef; border-radius: 12px; overflow: hidden; }
@@ -159,7 +166,7 @@ const { data: listing, error } = await supabase.from("listings").insert({
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 24px; }
         .modal { background: white; border-radius: 16px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
         .upload-area { border: 2px dashed #e8e8e8; border-radius: 10px; padding: 28px; text-align: center; cursor: pointer; transition: border-color 0.15s; }
-        .upload-area:hover { border-color: #aaa; }
+        .upload-area:hover { border-color: #494848; }
       `}</style>
 
       {/* Nav */}
@@ -172,10 +179,10 @@ const { data: listing, error } = await supabase.from("listings").insert({
             <span style={{ fontFamily: "Playfair Display, serif", fontSize: 17, fontWeight: 700 }}>FreshNest</span>
           </Link>
           <span style={{ fontSize: 13, color: "#ccc" }}>|</span>
-          <span style={{ fontSize: 14, color: "#888" }}>Seller Dashboard</span>
+          <span style={{ fontSize: 14, color: "#444343" }}>Seller Dashboard</span>
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontSize: 13, color: "#888" }}>{profile?.full_name}</span>
-            <button onClick={signOut} style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa" }}>
+            <span style={{ fontSize: 13, color: "#444343" }}>{profile?.full_name}</span>
+            <button onClick={signOut} style={{ background: "none", border: "none", cursor: "pointer", color: "#494848" }}>
               <LogOut size={16} />
             </button>
           </div>
@@ -196,9 +203,9 @@ const { data: listing, error } = await supabase.from("listings").insert({
               <div key={s.label} className="stat-card">
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
                   <div style={{ width: 36, height: 36, background: "#f5f5f5", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <Icon size={16} color="#888" strokeWidth={1.5} />
+                    <Icon size={16} color="#444343" strokeWidth={1.5} />
                   </div>
-                  <span style={{ fontSize: 13, color: "#aaa" }}>{s.label}</span>
+                  <span style={{ fontSize: 13, color: "#494848" }}>{s.label}</span>
                 </div>
                 <div style={{ fontFamily: "Playfair Display, serif", fontSize: 26, fontWeight: 700 }}>{s.value}</div>
               </div>
@@ -237,7 +244,7 @@ const { data: listing, error } = await supabase.from("listings").insert({
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                   <div>
                     <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 3 }}>{order.listings?.title}</div>
-                    <div style={{ fontSize: 13, color: "#888" }}>{order.profiles?.full_name} · {order.delivery_address}</div>
+                    <div style={{ fontSize: 13, color: "#444343" }}>{order.profiles?.full_name} · {order.delivery_address}</div>
                     <div style={{ fontSize: 12, color: "#bbb", marginTop: 4 }}>{new Date(order.placed_at).toLocaleString("en-IN")}</div>
                   </div>
                   <div style={{ textAlign: "right" }}>
@@ -259,7 +266,7 @@ const { data: listing, error } = await supabase.from("listings").insert({
                   {order.status === "placed" && (
                     <button
                       onClick={() => updateOrderStatus(order.id, "cancelled")}
-                      style={{ background: "none", border: "1px solid #eee", borderRadius: 7, padding: "8px 14px", fontSize: 12, cursor: "pointer", color: "#aaa", fontFamily: "inherit" }}
+                      style={{ background: "none", border: "1px solid #eee", borderRadius: 7, padding: "8px 14px", fontSize: 12, cursor: "pointer", color: "#494848", fontFamily: "inherit" }}
                     >
                       Cancel
                     </button>
@@ -293,33 +300,33 @@ const { data: listing, error } = await supabase.from("listings").insert({
                       onClick={() => removeListing(l.id)}
                       style={{ position: "absolute", top: 8, right: 8, background: "white", border: "none", borderRadius: "50%", width: 26, height: 26, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
                     >
-                      <X size={13} color="#888" />
+                      <X size={13} color="#444343" />
                     </button>
                   </div>
                   <div style={{ padding: 16 }}>
                     <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{l.title}</div>
                     <div style={{ fontFamily: "Playfair Display, serif", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>₹{l.price}</div>
-                    <div style={{ display: "flex", gap: 10, fontSize: 12, color: "#aaa", marginBottom: 10 }}>
+                    <div style={{ display: "flex", gap: 10, fontSize: 12, color: "#494848", marginBottom: 10 }}>
                       <span>{l.available_qty} / {l.total_quantity} left</span>
                       <span>·</span>
                       <span>{l.unit_label}</span>
                     </div>
                     {(() => {
-  const u = urgency(listing.expires_at);
+  const u = urgency(l.expires_at);
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 6, background: u.bg, borderRadius: 7, padding: "6px 10px", marginBottom: 12 }}>
       <Clock size={11} color={u.color} />
       <span style={{ fontSize: 11, color: u.color, fontWeight: 500 }}>
         {u.expired
           ? "Expired"
-          : new Date(listing.expires_at).toLocaleString("en-IN", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" })
+          : new Date(l.expires_at).toLocaleString("en-IN", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" })
         }
       </span>
-      {!u.expired && <span style={{ marginLeft: "auto", fontSize: 11, color: "#bbb" }}>{listing.available_qty} left</span>}
+      {!u.expired && <span style={{ marginLeft: "auto", fontSize: 11, color: "#bbb" }}>{l.available_qty} left</span>}
     </div>
   );
 })()}
-                    <div style={{ display: "inline-block", background: l.status === "active" ? "#f0faf4" : "#f5f5f5", color: l.status === "active" ? "#27ae60" : "#aaa", fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 20 }}>
+                    <div style={{ display: "inline-block", background: l.status === "active" ? "#f0faf4" : "#f5f5f5", color: l.status === "active" ? "#27ae60" : "#494848", fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 20 }}>
                       {l.status}
                     </div>
                   </div>
@@ -336,7 +343,7 @@ const { data: listing, error } = await supabase.from("listings").insert({
           <div className="modal">
             <div style={{ padding: "24px 28px", borderBottom: "1px solid #f2f2f2", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: 20, fontWeight: 700 }}>New listing</h2>
-              <button onClick={() => setShowForm(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa" }}><X size={20} /></button>
+              <button onClick={() => setShowForm(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#494848" }}><X size={20} /></button>
             </div>
 
             <form onSubmit={submitListing} style={{ padding: "24px 28px" }}>
@@ -358,13 +365,13 @@ const { data: listing, error } = await supabase.from("listings").insert({
                       onClick={() => { setImageFile(null); setImagePreview(null); }}
                       style={{ position: "absolute", top: 8, right: 8, background: "white", border: "none", borderRadius: "50%", width: 28, height: 28, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}
                     >
-                      <X size={14} color="#888" />
+                      <X size={14} color="#444343" />
                     </button>
                   </div>
                 ) : (
                   <div className="upload-area" onClick={() => fileInputRef.current.click()}>
                     <Upload size={24} color="#ccc" style={{ marginBottom: 8 }} />
-                    <p style={{ fontSize: 13, color: "#aaa", marginBottom: 4 }}>Click to upload a photo</p>
+                    <p style={{ fontSize: 13, color: "#494848", marginBottom: 4 }}>Click to upload a photo</p>
                     <p style={{ fontSize: 11, color: "#ccc" }}>JPG, PNG up to 5MB</p>
                   </div>
                 )}
@@ -390,13 +397,12 @@ const { data: listing, error } = await supabase.from("listings").insert({
 
               <div style={{ marginBottom: 16 }}>
                 <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 6 }}>Expires at *</label>
-                <input
+<input
   type="datetime-local"
   value={form.expires_at}
   onChange={e => setForm(p => ({ ...p, expires_at: e.target.value }))}
   min={new Date().toISOString().slice(0, 16)}
-  // eslint-disable-next-line react-hooks/purity
-  max={new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16)}
+  max={new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16)}
   className="form-input"
 />
               </div>
@@ -406,9 +412,9 @@ const { data: listing, error } = await supabase.from("listings").insert({
   <button
     type="button"
     onClick={() => setShowLocationPicker(true)}
-    style={{ width: "100%", border: "1px solid #e8e8e8", borderRadius: 8, padding: "10px 14px", fontSize: 14, fontFamily: "inherit", cursor: "pointer", background: "white", display: "flex", alignItems: "center", gap: 8, color: listingLocation ? "#111" : "#aaa" }}
+    style={{ width: "100%", border: "1px solid #e8e8e8", borderRadius: 8, padding: "10px 14px", fontSize: 14, fontFamily: "inherit", cursor: "pointer", background: "white", display: "flex", alignItems: "center", gap: 8, color: listingLocation ? "#111" : "#494848" }}
   >
-    <MapPin size={14} color={listingLocation ? "#27ae60" : "#aaa"} />
+    <MapPin size={14} color={listingLocation ? "#27ae60" : "#494848"} />
     {listingLocation ? listingLocation.address?.slice(0, 50) + "..." : "Set pickup location on map"}
   </button>
 </div>

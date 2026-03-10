@@ -10,6 +10,7 @@ import {
   MapPin, Phone, TrendingUp, LogOut, RefreshCw,
   ChevronRight, Bike, IndianRupee
 } from "lucide-react";
+import LocationPicker from "../components/ui/LocationPicker";
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -68,52 +69,39 @@ export default function RiderDashboard() {
   const [riderPos, setRiderPos]   = useState(null);
   const [loading, setLoading]     = useState(true);
   const [accepting, setAccepting] = useState(null);
-  const watchRef                  = useRef(null);
+  const watchRef = useRef(null);
+  const [riderLocation, setRiderLocation]       = useState(null);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      fetchAvailable();
-      fetchActive();
-      fetchHistory();
-      startLocationWatch();
-    }
-    return () => {
-      if (watchRef.current) navigator.geolocation.clearWatch(watchRef.current);
-    };
-  }, [user]);
 
-  useEffect(() => {
-    if (!user) return;
-    const channel = supabase
-      .channel("rider-orders")
-      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
-        fetchAvailable();
-        fetchActive();
-        fetchHistory();
-      })
-      .subscribe();
-    return () => supabase.removeChannel(channel);
-  }, [user]);
 
-  function startLocationWatch() {
-    if (!navigator.geolocation) return;
-    watchRef.current = navigator.geolocation.watchPosition(
-      pos => setRiderPos([pos.coords.latitude, pos.coords.longitude]),
-      () => {},
-      { enableHighAccuracy: true }
-    );
-  }
 
-  async function fetchAvailable() {
-    setLoading(true);
+
+function startLocationWatch() {
+  if (!navigator.geolocation) return;
+  watchRef.current = navigator.geolocation.watchPosition(
+    pos => {
+      const loc = [pos.coords.latitude, pos.coords.longitude];
+      setRiderPos(loc);
+      if (!riderLocation) {
+        setRiderLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      }
+    },
+    () => {},
+    { enableHighAccuracy: true }
+  );
+}
+
+async function fetchAvailable() {
+  setLoading(true);
     const { data } = await supabase
-      .from("orders")
+    .from("orders")
       .select(`
         *,
         listings(title, images, price, unit_label),
         buyer:profiles!buyer_id(full_name, phone),
         seller:profiles!seller_id(full_name, phone)
-      `)
+        `)
       .eq("status", "ready")
       .is("rider_id", null)
       .order("placed_at", { ascending: true });
@@ -121,7 +109,7 @@ export default function RiderDashboard() {
     setLoading(false);
   }
 
-  async function fetchActive() {
+    async function fetchActive() {
     if (!user) return;
     const { data } = await supabase
       .from("orders")
@@ -177,6 +165,21 @@ export default function RiderDashboard() {
     fetchHistory();
     setTab("history");
   }
+  useEffect(() => {
+  if (!user) return;
+  const channel = supabase
+    .channel("rider-orders")
+    .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
+      fetchAvailable();
+      fetchActive();
+      fetchHistory();
+    })
+    .subscribe();
+  return () => supabase.removeChannel(channel);
+  }, [user]);
+
+
+  
 
   const totalEarnings   = history.reduce((s, o) => s + Math.round(o.total_amount * 0.1), 0);
   const totalDeliveries = history.length;
@@ -189,7 +192,7 @@ export default function RiderDashboard() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        .tab-btn { background: none; border: none; font-size: 14px; font-family: inherit; cursor: pointer; color: #aaa; border-bottom: 2px solid transparent; padding-bottom: 12px; transition: all 0.15s; }
+        .tab-btn { background: none; border: none; font-size: 14px; font-family: inherit; cursor: pointer; color: #494848; border-bottom: 2px solid transparent; padding-bottom: 12px; transition: all 0.15s; }
         .tab-btn.active { color: #111; border-bottom-color: #111; font-weight: 600; }
         .card { background: white; border: 1px solid #efefef; border-radius: 14px; overflow: hidden; margin-bottom: 14px; }
         .stat-card { background: white; border: 1px solid #efefef; border-radius: 12px; padding: 18px; }
@@ -206,20 +209,27 @@ export default function RiderDashboard() {
             </div>
             <span style={{ fontFamily: "Playfair Display, serif", fontSize: 17, fontWeight: 700 }}>FreshNest</span>
           </Link>
+          <button
+  onClick={() => setShowLocationPicker(true)}
+  style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "1px solid #e8e8e8", borderRadius: 8, padding: "7px 12px", fontSize: 12, cursor: "pointer", color: riderLocation ? "#27ae60" : "#aaa", fontFamily: "inherit" }}
+>
+  <MapPin size={12} color={riderLocation ? "#27ae60" : "#aaa"} />
+  {riderLocation ? "Location set" : "Set location"}
+</button>
           <span style={{ color: "#e8e8e8" }}>|</span>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <Bike size={15} color="#888" />
-            <span style={{ fontSize: 14, color: "#888" }}>Rider Portal</span>
+            <Bike size={15} color="#444343" />
+            <span style={{ fontSize: 14, color: "#444343" }}>Rider Portal</span>
           </div>
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, background: riderPos ? "#f0faf4" : "#f5f5f5", border: `1px solid ${riderPos ? "#c8e6c9" : "#e8e8e8"}`, borderRadius: 20, padding: "5px 12px" }}>
               <div className={riderPos ? "pulse" : ""} style={{ width: 7, height: 7, borderRadius: "50%", background: riderPos ? "#27ae60" : "#ccc" }} />
-              <span style={{ fontSize: 12, color: riderPos ? "#27ae60" : "#aaa", fontWeight: 500 }}>
+              <span style={{ fontSize: 12, color: riderPos ? "#27ae60" : "#494848", fontWeight: 500 }}>
                 {riderPos ? "Online" : "Locating..."}
               </span>
             </div>
-            <span style={{ fontSize: 13, color: "#888" }}>{profile?.full_name}</span>
-            <button onClick={signOut} style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa", display: "flex" }}>
+            <span style={{ fontSize: 13, color: "#444343" }}>{profile?.full_name}</span>
+            <button onClick={signOut} style={{ background: "none", border: "none", cursor: "pointer", color: "#494848", display: "flex" }}>
               <LogOut size={16} />
             </button>
           </div>
@@ -240,9 +250,9 @@ export default function RiderDashboard() {
               <div key={s.label} className="stat-card">
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
                   <div style={{ width: 32, height: 32, background: "#f5f5f5", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <Icon size={15} color="#888" strokeWidth={1.5} />
+                    <Icon size={15} color="#444343" strokeWidth={1.5} />
                   </div>
-                  <span style={{ fontSize: 12, color: "#aaa" }}>{s.label}</span>
+                  <span style={{ fontSize: 12, color: "#494848" }}>{s.label}</span>
                 </div>
                 <div style={{ fontFamily: "Playfair Display, serif", fontSize: 24, fontWeight: 700 }}>{s.value}</div>
                 <div style={{ fontSize: 11, color: "#bbb", marginTop: 4 }}>{s.sub}</div>
@@ -258,7 +268,7 @@ export default function RiderDashboard() {
               <div className="pulse" style={{ width: 10, height: 10, borderRadius: "50%", background: "#27ae60", flexShrink: 0 }} />
               <div>
                 <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>Active delivery in progress</div>
-                <div style={{ fontSize: 12, color: "#aaa" }}>{active.listings?.title} → {active.buyer?.full_name}</div>
+                <div style={{ fontSize: 12, color: "#494848" }}>{active.listings?.title} → {active.buyer?.full_name}</div>
               </div>
             </div>
             <button
@@ -287,10 +297,10 @@ export default function RiderDashboard() {
         {tab === "available" && (
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <p style={{ fontSize: 13, color: "#aaa" }}>Orders ready for pickup near you</p>
+              <p style={{ fontSize: 13, color: "#494848" }}>Orders ready for pickup near you</p>
               <button
                 onClick={fetchAvailable}
-                style={{ background: "none", border: "1px solid #e8e8e8", borderRadius: 7, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: "#888", display: "flex", alignItems: "center", gap: 5, fontFamily: "inherit" }}
+                style={{ background: "none", border: "1px solid #e8e8e8", borderRadius: 7, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: "#444343", display: "flex", alignItems: "center", gap: 5, fontFamily: "inherit" }}
               >
                 <RefreshCw size={12} /> Refresh
               </button>
@@ -324,7 +334,7 @@ export default function RiderDashboard() {
                         </div>
                         <div>
                           <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>{order.listings?.title}</div>
-                          <div style={{ fontSize: 12, color: "#aaa" }}>Qty: {order.quantity} · ₹{order.total_amount}</div>
+                          <div style={{ fontSize: 12, color: "#494848" }}>Qty: {order.quantity} · ₹{order.total_amount}</div>
                         </div>
                       </div>
                       <div style={{ textAlign: "right" }}>
@@ -339,7 +349,7 @@ export default function RiderDashboard() {
                         <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                           <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#27ae60", flexShrink: 0, marginTop: 4 }} />
                           <div>
-                            <div style={{ fontSize: 11, color: "#aaa", marginBottom: 1 }}>PICKUP FROM</div>
+                            <div style={{ fontSize: 11, color: "#494848", marginBottom: 1 }}>PICKUP FROM</div>
                             <div style={{ fontSize: 13, fontWeight: 500 }}>{order.seller?.full_name}</div>
                           </div>
                         </div>
@@ -357,9 +367,9 @@ export default function RiderDashboard() {
                         <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                           <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#c0392b", flexShrink: 0, marginTop: 4 }} />
                           <div>
-                            <div style={{ fontSize: 11, color: "#aaa", marginBottom: 1 }}>DELIVER TO</div>
+                            <div style={{ fontSize: 11, color: "#494848", marginBottom: 1 }}>DELIVER TO</div>
                             <div style={{ fontSize: 13, fontWeight: 500 }}>{order.buyer?.full_name}</div>
-                            <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>{order.delivery_address}</div>
+                            <div style={{ fontSize: 12, color: "#444343", marginTop: 2 }}>{order.delivery_address}</div>
                           </div>
                         </div>
                         <a
@@ -374,7 +384,7 @@ export default function RiderDashboard() {
                     <button
                       onClick={() => acceptOrder(order)}
                       disabled={!!active || accepting === order.id}
-                      style={{ width: "100%", background: active ? "#f5f5f5" : "#111", color: active ? "#aaa" : "white", border: "none", borderRadius: 8, padding: 13, fontSize: 14, fontWeight: 600, cursor: active ? "not-allowed" : "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+                      style={{ width: "100%", background: active ? "#f5f5f5" : "#111", color: active ? "#494848" : "white", border: "none", borderRadius: 8, padding: 13, fontSize: 14, fontWeight: 600, cursor: active ? "not-allowed" : "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
                     >
                       <Bike size={15} />
                       {accepting === order.id ? "Accepting..." : active ? "Finish current delivery first" : "Accept delivery"}
@@ -418,7 +428,7 @@ export default function RiderDashboard() {
                     <div className="pulse" style={{ width: 10, height: 10, borderRadius: "50%", background: "#27ae60", flexShrink: 0 }} />
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 600, color: "#27ae60" }}>Delivery in progress</div>
-                      <div style={{ fontSize: 12, color: "#888" }}>Navigate to the delivery address below</div>
+                      <div style={{ fontSize: 12, color: "#444343" }}>Navigate to the delivery address below</div>
                     </div>
                   </div>
 
@@ -432,10 +442,10 @@ export default function RiderDashboard() {
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>{active.listings?.title}</div>
-                      <div style={{ fontSize: 12, color: "#aaa" }}>Qty: {active.quantity} · ₹{active.total_amount}</div>
+                      <div style={{ fontSize: 12, color: "#494848" }}>Qty: {active.quantity} · ₹{active.total_amount}</div>
                     </div>
                     <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: 11, color: "#aaa", marginBottom: 2 }}>Your earning</div>
+                      <div style={{ fontSize: 11, color: "#494848", marginBottom: 2 }}>Your earning</div>
                       <div style={{ fontFamily: "Playfair Display, serif", fontSize: 20, fontWeight: 700, color: "#27ae60" }}>
                         ₹{Math.round(active.total_amount * 0.1)}
                       </div>
@@ -446,7 +456,7 @@ export default function RiderDashboard() {
                   <div style={{ background: "#fafafa", border: "1px solid #efefef", borderRadius: 10, padding: 14, marginBottom: 16 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                       <div>
-                        <div style={{ fontSize: 11, color: "#aaa", marginBottom: 2 }}>PICKUP FROM</div>
+                        <div style={{ fontSize: 11, color: "#494848", marginBottom: 2 }}>PICKUP FROM</div>
                         <div style={{ fontSize: 14, fontWeight: 500 }}>{active.seller?.full_name}</div>
                       </div>
                       <a
@@ -459,10 +469,10 @@ export default function RiderDashboard() {
 
                     <div style={{ borderTop: "1px solid #efefef", paddingTop: 14, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                       <div>
-                        <div style={{ fontSize: 11, color: "#aaa", marginBottom: 2 }}>DELIVER TO</div>
+                        <div style={{ fontSize: 11, color: "#494848", marginBottom: 2 }}>DELIVER TO</div>
                         <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 4 }}>{active.buyer?.full_name}</div>
-                        <div style={{ fontSize: 13, color: "#888", display: "flex", alignItems: "flex-start", gap: 5, maxWidth: 200 }}>
-                          <MapPin size={12} style={{ flexShrink: 0, marginTop: 2 }} color="#aaa" />
+                        <div style={{ fontSize: 13, color: "#444343", display: "flex", alignItems: "flex-start", gap: 5, maxWidth: 200 }}>
+                          <MapPin size={12} style={{ flexShrink: 0, marginTop: 2 }} color="#494848" />
                           {active.delivery_address}
                         </div>
                       </div>
@@ -510,9 +520,9 @@ export default function RiderDashboard() {
               {/* Earnings summary */}
               <div style={{ background: "#111", color: "white", borderRadius: 14, padding: "18px 20px", marginBottom: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <div style={{ fontSize: 12, color: "#888", marginBottom: 4 }}>TOTAL EARNINGS</div>
+                  <div style={{ fontSize: 12, color: "#444343", marginBottom: 4 }}>TOTAL EARNINGS</div>
                   <div style={{ fontFamily: "Playfair Display, serif", fontSize: 28, fontWeight: 700 }}>₹{totalEarnings}</div>
-                  <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>{totalDeliveries} deliveries completed</div>
+                  <div style={{ fontSize: 12, color: "#444343", marginTop: 2 }}>{totalDeliveries} deliveries completed</div>
                 </div>
                 <TrendingUp size={40} color="#333" strokeWidth={1} />
               </div>
@@ -529,7 +539,7 @@ export default function RiderDashboard() {
                       </div>
                       <div>
                         <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{order.listings?.title}</div>
-                        <div style={{ fontSize: 12, color: "#aaa" }}>
+                        <div style={{ fontSize: 12, color: "#494848" }}>
                           {new Date(order.delivered_at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                         </div>
                       </div>
@@ -548,6 +558,17 @@ export default function RiderDashboard() {
         )}
 
       </div>
+      {showLocationPicker && (
+  <LocationPicker
+    value={riderLocation}
+    onChange={loc => {
+      setRiderLocation(loc);
+      setRiderPos([loc.lat, loc.lng]);
+      setShowLocationPicker(false);
+    }}
+    onClose={() => setShowLocationPicker(false)}
+  />
+)}
     </div>
   );
 }

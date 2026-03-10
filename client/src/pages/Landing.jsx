@@ -69,8 +69,8 @@ export default function Landing() {
         <div style={{ maxWidth: 1080, margin: "0 auto", padding: "80px 40px" }}>
           <div style={{ maxWidth: 580 }}>
             <div className="f1" style={{ display: "inline-flex", alignItems: "center", gap: 6, border: "1px solid #efefef", borderRadius: 20, padding: "5px 12px", marginBottom: 28 }}>
-              <MapPin size={11} color="#aaa" />
-              <span style={{ fontSize: 12, color: "#aaa" }}>Hyperlocal food marketplace</span>
+              <MapPin size={11} color="#494848" />
+              <span style={{ fontSize: 12, color: "#494848" }}>Hyperlocal food marketplace</span>
             </div>
             <h1 className="f2" style={{ fontFamily: "Playfair Display, serif", fontSize: "clamp(36px, 5vw, 60px)", fontWeight: 700, lineHeight: 1.1, letterSpacing: "-1.5px", marginBottom: 22 }}>
               Food made at home,<br />

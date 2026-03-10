@@ -83,7 +83,7 @@ export default function Signup() {
                     style={{ flex: 1, border: `1.5px solid ${form.role === r.value ? '#111' : '#e8e8e8'}`, borderRadius: 8, padding: '10px 8px', cursor: 'pointer', textAlign: 'center', background: form.role === r.value ? '#111' : 'white', transition: 'all 0.15s' }}
                   >
                     <div style={{ fontSize: 13, fontWeight: 600, color: form.role === r.value ? 'white' : '#111' }}>{r.label}</div>
-                    <div style={{ fontSize: 11, color: form.role === r.value ? '#aaa' : '#bbb', marginTop: 2 }}>{r.desc}</div>
+                    <div style={{ fontSize: 11, color: form.role === r.value ? '#494848' : '#bbb', marginTop: 2 }}>{r.desc}</div>
                   </div>
                 ))}
               </div>
