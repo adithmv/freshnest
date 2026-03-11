@@ -109,32 +109,7 @@ async function fetchListings(loc) {
     setListings([]);
   }
   setLoading(false);
-}
 
-    // Fetch seller profiles separately
-    const sellerIds = [...new Set(allListings.map(l => l.seller_id))];
-    const { data: sellers } = await supabase
-      .from("seller_profiles")
-      .select("user_id, shop_name, avg_rating, shop_type")
-      .in("user_id", sellerIds);
-
-    // Merge seller data into listings
-    const merged = allListings.map(l => ({
-      ...l,
-      seller_profiles: sellers?.find(s => s.user_id === l.seller_id) || null,
-      distance_meters: null,
-    }));
-
-    if (loc) {
-      merged.sort((a, b) => a.distance_meters - b.distance_meters);
-    }
-
-    setListings(merged);
-  } catch (err) {
-    console.error(err);
-    setListings([]);
-  }
-  setLoading(false);
 }
 
   const filtered = listings.filter(l => {
