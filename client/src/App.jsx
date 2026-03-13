@@ -12,6 +12,7 @@ import Checkout       from './pages/Checkout'
 import OrderSuccess   from './pages/OrderSuccess'
 import NotFound from './pages/NotFound'
 import RiderDashboard from './pages/RiderDashboard'
+import ShopPage from './pages/ShopPage'
 
 function ProtectedRoute({ children, role }) {
   const { user, profile, loading } = useAuth()
@@ -34,6 +35,7 @@ export default function App() {
       <Route path="/order-success" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
       <Route path="/orders"      element={<ProtectedRoute><Orders /></ProtectedRoute>} />
       <Route path="/dashboard"   element={<ProtectedRoute role="seller"><SellerDashboard /></ProtectedRoute>} />
+      <Route path="/shop/:id" element={<ShopPage />} />
       <Route path="*" element={<NotFound />} />
       <Route path="/rider" element={<ProtectedRoute role="rider"><RiderDashboard /></ProtectedRoute>} />
     </Routes>
