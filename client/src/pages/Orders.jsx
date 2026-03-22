@@ -118,7 +118,7 @@ function TrackOrder({ order, onClose }) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 500 }}>{order.seller.full_name}</div>
-                <div style={{ fontSize: 12, color: "#494848" }}>{order.seller_profiles?.shop_name}</div>
+                <div style={{ fontSize: 12, color: "#494848" }}>{order.seller_profiles?.shop_name || order.seller?.full_name}</div>
               </div>
               {order.seller.phone && (
                 <a href={`tel:${order.seller.phone}`} style={{ display: "flex", alignItems: "center", gap: 6, background: "#111", color: "white", borderRadius: 8, padding: "8px 14px", fontSize: 13, textDecoration: "none" }}>
@@ -166,16 +166,17 @@ export default function Orders() {
 
   async function fetchOrders() {
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("orders")
       .select(`
-        *,
-        listings(id, title, price, images, unit_label),
-        seller:profiles!seller_id(full_name, phone)
-      `)
+  *,
+  listings(id, title, price, images, unit_label),
+  seller:profiles!seller_id(full_name, phone)
+`)
       .eq("buyer_id", user.id)
       .order("placed_at", { ascending: false });
     setOrders(data || []);
+    console.log("orders data:", data, "error:", error);
     setLoading(false);
   }
 
@@ -210,7 +211,7 @@ export default function Orders() {
             <div style={{ width: 26, height: 26, background: "#111", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Home size={13} color="white" />
             </div>
-            <span style={{ fontFamily: "Playfair Display, serif", fontSize: 17, fontWeight: 700 }}>FreshNest</span>
+            <span style={{ fontFamily: "Playfair Display, serif", fontSize: 17, fontWeight: 700 }}>Home Bite</span>
           </Link>
         </div>
       </nav>

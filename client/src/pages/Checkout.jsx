@@ -71,7 +71,17 @@ export default function Checkout() {
     );
 
     await Promise.all(orderPromises);
-    clearCart();
+
+// Decrement available quantity for each item
+await Promise.all(cart.map(async (item) => {
+  try {
+    await supabase.rpc("decrement_qty", { listing_id: item.id, qty: item.qty });
+  } catch {
+    // fail silently
+  }
+}));
+
+clearCart();
     setProcessing(false);
     navigate("/order-success");
   }
@@ -103,7 +113,7 @@ export default function Checkout() {
             <div style={{ width: 26, height: 26, background: "#111", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Home size={13} color="white" />
             </div>
-            <span style={{ fontFamily: "Playfair Display, serif", fontSize: 17, fontWeight: 700 }}>FreshNest</span>
+            <span style={{ fontFamily: "Playfair Display, serif", fontSize: 17, fontWeight: 700 }}>Home Bite</span>
           </Link>
           <span style={{ color: "#e8e8e8" }}>|</span>
           <span style={{ fontSize: 14, color: "#444343" }}>Checkout</span>

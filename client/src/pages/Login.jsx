@@ -21,7 +21,6 @@ export default function Login() {
     if (error) return setError(error.message)
     const role = data.user?.user_metadata?.role
     if (role === "seller") navigate("/dashboard");
-else if (role === "rider") navigate("/rider");
 else navigate("/browse");
   }
 
@@ -31,7 +30,6 @@ else navigate("/browse");
 useEffect(() => {
   if (user && profile) {
     if (profile.role === "seller") navigate("/dashboard");
-    else if (profile.role === "rider") navigate("/rider");
     else navigate("/browse");
   }
 }, [user, profile]);
@@ -45,7 +43,7 @@ useEffect(() => {
           <div style={{ width: 28, height: 28, background: '#111', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Home size={14} color="white" />
           </div>
-          <span style={{ fontFamily: 'Georgia, serif', fontSize: 20, fontWeight: 700 }}>FreshNest</span>
+          <span style={{ fontFamily: 'Georgia, serif', fontSize: 20, fontWeight: 700 }}>Home Bite</span>
         </Link>
 
         <div style={{ background: 'white', border: '1px solid #efefef', borderRadius: 14, padding: 32 }}>

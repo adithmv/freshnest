@@ -8,7 +8,6 @@ import { Home, Mail, Lock, User, Phone, ArrowRight, MapPin, Camera, Clock, Store
 const ROLES = [
   { value: 'buyer',  label: 'Buyer',  desc: 'I want to order food' },
   { value: 'seller', label: 'Seller', desc: 'I want to sell food' },
-  { value: 'rider',  label: 'Rider',  desc: 'I want to deliver' },
 ]
 
 const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
@@ -34,7 +33,6 @@ export default function Signup() {
   useEffect(() => {
     if (user && profile) {
       if (profile.role === 'seller') navigate('/dashboard')
-      else if (profile.role === 'rider') navigate('/rider')
       else navigate('/browse')
     }
   }, [user, profile])
@@ -89,7 +87,6 @@ export default function Signup() {
       }
 
       if (form.role === 'seller') navigate('/dashboard')
-      else if (form.role === 'rider') navigate('/rider')
       else navigate('/browse')
     } catch (err) {
       setError(err.message)

@@ -17,7 +17,6 @@ export default function Landing() {
   useEffect(() => {
     if (user && profile) {
       if (profile.role === "seller") navigate("/dashboard");
-      else if (profile.role === "rider") navigate("/rider");
       else navigate("/browse");
     }
   }, [user, profile]);

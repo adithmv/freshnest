@@ -40,7 +40,7 @@ export default function OrderSuccess() {
             <div style={{ width: 26, height: 26, background: "#111", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Home size={13} color="white" />
             </div>
-            <span style={{ fontFamily: "Playfair Display, serif", fontSize: 17, fontWeight: 700 }}>FreshNest</span>
+            <span style={{ fontFamily: "Playfair Display, serif", fontSize: 17, fontWeight: 700 }}>Home Bite</span>
           </Link>
         </div>
       </nav>
