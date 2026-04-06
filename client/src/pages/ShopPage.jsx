@@ -83,7 +83,7 @@ export default function ShopPage() {
 
   async function fetchListings() {
     setLoading(true);
-    const { data } = await supabase.from("listings").select("*, shop_categories(id, name)").eq("seller_id", id).eq("status", "active").gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false });
+    const { data } = await supabase.from("listings").select("*, category:shop_categories(id, name)").eq("seller_id", id).eq("status", "active").gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false });
     setListings(data || []);
     setLoading(false);
   }

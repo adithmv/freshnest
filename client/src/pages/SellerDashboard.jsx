@@ -79,7 +79,7 @@ export default function SellerDashboard() {
   async function fetchListings() {
     const { data } = await supabase
       .from("listings")
-      .select("*, shop_categories(name)")
+      .select("*, category:shop_categories(id, name)")
       .eq("seller_id", user.id)
       .order("created_at", { ascending: false });
     setListings(data || []);
@@ -313,7 +313,7 @@ export default function SellerDashboard() {
                     <div style={{ height: 130, background: "#f5f2ee", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
                       {l.images?.[0] ? <img src={l.images[0]} alt={l.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <Image size={28} color="#ccc" strokeWidth={1} />}
                       <button onClick={() => removeListing(l.id)} style={{ position: "absolute", top: 8, right: 8, background: "white", border: "none", borderRadius: "50%", width: 26, height: 26, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}><X size={13} color="#444" /></button>
-                      {l.shop_categories?.name && (
+                      {l.category?.name && (
                         <div style={{ position: "absolute", bottom: 8, left: 8, background: "rgba(0,0,0,0.55)", color: "white", fontSize: 10, padding: "2px 8px", borderRadius: 20 }}>{l.shop_categories.name}</div>
                       )}
                     </div>
